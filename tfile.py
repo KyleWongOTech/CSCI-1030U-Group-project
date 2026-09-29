@@ -1,4 +1,48 @@
 #section class that keeps track of what day and times the classes happen in
+
+def get_user_pref() -> list[list[str]]:
+    days = ["Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday "]
+    pref = []
+
+    print ("Time of day prefrences")
+    print( "1. Moring (8:00- 12:00)")
+    print("2. Afternoon (12:00 - 16:00)")
+    print("3. Evening (16:00 - 20:00)")
+    print("4. No preference")
+
+
+    for i in range(len(days)):
+        while True:
+            choose = input(f"Please choose from 1-4 for {days[i]}")
+
+            if choose == "1":
+                pref.append([days[i], "Morning"])
+                break
+
+            elif choose == "2":
+                pref.append([days[i], "Afternoon"])
+                break
+
+            elif choose == "3":
+                pref.append([days[i], "Evening"])
+                break
+
+            elif choose == "4":
+                pref.append([days[i], "Any"])
+                break
+
+            else:
+                print("Not a valid choice.")
+
+
+    return pref
+            
+
+
+
+
+
+
 class section:
     def __init__(self, day: str, time_start: str, time_end: str):
         self.day=day
@@ -7,7 +51,7 @@ class section:
 
 #courses to keep track of the name and the sections that the classes happen in
 class course:
-    def __init__(self, name: str, slot1: section, slot2: section):
+    def __init__(self, name: str, slot1: section, slot2: section = None):
         self.name=name
         self.slot1=slot1
         self.slot2=slot2
@@ -42,19 +86,20 @@ def course_maker(courses : list[list[course]], courseList:list[course]):
 
 
         #slot 2 for lectures
-        for i in range (1, len(courses)):
-            if(not available):
-                break
-            if courseList[x].slot2.time_start==courses[i][0].replace(" ", ""):
-                for j in range (i, len(courses)):
-                    if courseList[x].slot2.time_end==courses[j][0].replace(" ", ""):
-                        for k in range (len(courses[0])):
-                            if courseList[x].slot2.day==courses[0][k].replace(" ", "") and courses[i][k]== "":
-                                for l in range (i,j+1):
-                                    courses[l][k] = courseList[x].name
-                            elif courseList[x].slot2.day==courses[0][k].replace(" ", "") and courses[i][k]!= "":
-                                available=False
-                                print("f")
+        if courseList[x].slot2 is not None:
+            for i in range (1, len(courses)):
+                if(not available):
+                    break
+                if courseList[x].slot2.time_start==courses[i][0].replace(" ", ""):
+                    for j in range (i, len(courses)):
+                        if courseList[x].slot2.time_end==courses[j][0].replace(" ", ""):
+                            for k in range (len(courses[0])):
+                                if courseList[x].slot2.day==courses[0][k].replace(" ", "") and courses[i][k]== "":
+                                    for l in range (i,j+1):
+                                        courses[l][k] = courseList[x].name
+                                elif courseList[x].slot2.day==courses[0][k].replace(" ", "") and courses[i][k]!= "":
+                                    available=False
+                                    print("f")
 
         if not available:
             for i in range (len(courses)):
@@ -167,13 +212,23 @@ MATH1020UTUTC=section("Wednesday", "8:10", "9:30")
 PHY1020UA=section("Wednesday", "12:40", "14:00")
 PHY1020UB=section("Thursday", "12:40", "14:00")
 
-PHY = course("PHY 101", PHY1020UA, PHY1020UB)
+PHY = course("PHY 101", PHY1020UA, PHY1020UB,)
+
+CALC = course("CALC 102", MATH1020UA, MATH1020UTUTA,)
 
 
-testCourseList: list[course]=[PHY]
+testCourseList: list[course] = [CALC, PHY]
 
-newCalender:list[list[course]]=course_maker(calender,testCourseList)
+newCalender: list[list[course]] = course_maker(calender, testCourseList)
 
+
+user_pref = get_user_pref()
+print(user_pref)
+print("")
+print("")
+print("")
 
 for i in range(len(newCalender)):
     print(newCalender[i])
+
+
