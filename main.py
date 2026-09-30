@@ -4,11 +4,11 @@ def get_user_pref() -> list[list[str]]:
     days = ["Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday "]
     pref = []
 
-    print ("Time of day prefrences")
-    print( "1. Moring (8:00- 12:00)")
+    print ("Time of day preferences:")
+    print("1. Morning (08:00 - 12:00)")
     print("2. Afternoon (12:00 - 16:00)")
     print("3. Evening (16:00 - 20:00)")
-    print("4. No preference")
+    print("4. No preference\n")
 
 
     for i in range(len(days)):
@@ -114,15 +114,16 @@ def course_maker(courses : list[list[course]], courseList:list[course]):
 
 
 #initializes the course schedule
-calender: list[list[str]] = [["  Time    ", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-                            ["  8:00    ","","","","","",""],
-                            ["  8:10    ","","","","","",""],
-                            ["  8:30    ","","","","","",""],
-                            ["  8:40    ","","","","","",""],
-                            ["  9:00    ","","","","","",""],
-                            ["  9:10    ","","","","","",""],
-                            ["  9:30    ","","","","","",""],
-                            ["  9:40    ","","","","","",""],
+
+calendar: list[list[str]] = [["  Time    ", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                            ["  08:00    ","","","","","",""],
+                            ["  08:10    ","","","","","",""],
+                            ["  08:30    ","","","","","",""],
+                            ["  08:40    ","","","","","",""],
+                            ["  09:00    ","","","","","",""],
+                            ["  09:10    ","","","","","",""],
+                            ["  09:30    ","","","","","",""],
+                            ["  09:40    ","","","","","",""],
                             ["  10:00    ","","","","","",""],
                             ["  10:10    ","","","","","",""],
                             ["  10:30    ","","","","","",""],
@@ -165,11 +166,6 @@ calender: list[list[str]] = [["  Time    ", "Monday", "Tuesday", "Wednesday", "T
                             ["  19:40    ","","","","","",""],
                             ["  20:00    ","","","","","",""],]
 
-#prints out the empty course schedule
-for i in range(len(calender)):
-
-    print(calender[i])
-
 
 
 CSCI1061UA=section("Tuesday", "15:40", "17:00")
@@ -180,8 +176,8 @@ CSCI1061UD=section("Monday", "14:10", "15:30")
 CSCI1061ULABA=section("Tuesday", "17:10", "20:00")
 CSCI1061ULABB=section("Friday", "14:10", "17:00")
 CSCI1061ULABC=section("Thursday", "17:10", "20:00")
-CSCI1061ULABD=section("Tuesday", "8:10", "11:00")
-CSCI1061ULABE=section("Friday", "8:10", "11:00")
+CSCI1061ULABD=section("Tuesday", "08:10", "11:00")
+CSCI1061ULABE=section("Friday", "08:10", "11:00")
 
 
 #CSCI 1050U arch
@@ -191,7 +187,7 @@ CSCI1050UB=section("Wednesday", "12:40", "14:00")
 CSCI1050UC=section("Thursday", "12:40", "14:00")
 CSCI1050UD=section("Wednesday", "12:40", "14:00")
 
-CSCI1050ULABA=section("Thursday", "8:10", "11:00")
+CSCI1050ULABA=section("Thursday", "08:10", "11:00")
 CSCI1050ULABB=section("Tuesday", "14:10", "17:00")
 CSCI1050ULABC=section("Tuesday", "11:10", "14:00")
 CSCI1050ULABD=section("Tuesday", "17:10", "20:00")
@@ -199,13 +195,13 @@ CSCI1050ULABD=section("Tuesday", "17:10", "20:00")
 
 #MATH 1020U  calc II
 
-MATH1020UA=section("Wednesday", "8:10", "9:30")
+MATH1020UA=section("Wednesday", "08:10", "09:30")
 MATH1020UB=section("Monday", "12:10", "13:30")
 MATH1020UC=section("Friday", "17:10", "18:30")
 
-MATH1020UTUTA=section("Thursday", "8:10", "9:30")
-MATH1020UTUTB=section("Tuesday", "8:10", "9:30")
-MATH1020UTUTC=section("Wednesday", "8:10", "9:30")
+MATH1020UTUTA=section("Thursday", "08:10", "09:30")
+MATH1020UTUTB=section("Tuesday", "08:10", "09:30")
+MATH1020UTUTC=section("Wednesday", "08:10", "09:30")
 
 #PHY 1020U Physcis II
 
@@ -237,14 +233,25 @@ CALC = course("CALC 102", MATH1020UA, MATH1020UTUTA,)
 
 testCourseList: list[course] = [CALC, PHY]
 
-newCalender: list[list[course]] = course_maker(calender, testCourseList)
+newCalendar: list[list[course]] = course_maker(calendar, testCourseList)
 
 
 user_pref = get_user_pref()
-print(user_pref)
-print("")
-print("")
+print("\nYour schedule with preferred times of day:\n")
+for pref in user_pref:
+    print(pref[0].center(10) + ": " + pref[1].center(10))
+
 print("")
 
-for i in range(len(newCalender)):
-    print(newCalender[i])
+# finding the max length of each string on the calendar
+max_length = 0
+for row in newCalendar:
+    for cell in row:
+        if len(cell.strip()) > max_length:      #strip() takes spaces out of
+            max_length = len(cell.strip()) 
+
+column_width = max_length + 2
+
+
+for row in newCalendar:
+    print("|".join(cell.strip().center(column_width) for cell in row))
