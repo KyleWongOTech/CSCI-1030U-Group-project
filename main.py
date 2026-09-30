@@ -12,6 +12,11 @@ class course:
         self.slot1=slot1
         self.slot2=slot2
 
+# turns the time into minutes so that its easier to check for breaks  
+def minutes(time):
+    time=time.split(":")
+    return int(time[0])*60+int(time[1])
+
 def course_maker(courses : list[list[course]], courseList:list[course]):
 
 
@@ -35,8 +40,26 @@ def course_maker(courses : list[list[course]], courseList:list[course]):
 
                             #
                             if courseList[x].slot1.day==courses[0][k].replace(" ", "") and courses[i][k]== "":
-                                for l in range (i,j+1):
-                                    courses[l][k] = courseList[x].name
+
+                                #gets the start and end time for each class
+                                start=minutes(courseList[x].slot1.time_start)
+                                end=minutes(courseList[x].slot1.time_end)
+
+                                # goes through all the times on specific days
+                                for row in range (1, len(courses)):
+                                    row_time=minutes(courses[row][0].replace(" ", ""))
+
+                                    #chceks 30 mins before and after the class 
+                                    if row_time>start-30 and row_time<end+30:
+
+                                        #if another class is there, it will not add the break to the schedule
+                                        if courses[row][k]!="":
+                                            available=False
+                    
+
+                                if available:
+                                    for l in range (i,j+1):
+                                        courses[l][k] = courseList[x].name
 
         available= any(courseList[x].name in Slots for Slots in courses)
 
@@ -136,7 +159,7 @@ testSection4=section("Thursday", "11:00", "15:00")
 
 #creating course objects
 testCourse1=course("Math 101", testSection3, testSection4)
-testCourse2=course("Physic 101", testSection1, testSection2)
+testCourse2=course("Physics 101", testSection1, testSection2)
 
 #creating a list of the course object
 testCourseList: list[course]=[testCourse2, testCourse1]
