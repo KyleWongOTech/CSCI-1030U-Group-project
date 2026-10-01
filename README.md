@@ -6,3 +6,10 @@ The point of the program is to help students with course selection. The program 
 
 course_maker function: it takes in a 2D list of the course class and a 1D list of the course class as parameters. It will then check the first column of the 2D array, and if the start time for the course in the x element of the 1D list, it will move on. Then it will see where the end time is for the class it then sorts through the first list in the 2D list which contains all the days and checks to see which day aligns with the class days and if the time slot desired in that day is empty. If both conditions are true it will then add the class name to the 2D list starting from the start time to the end time which was tracked in the for loops earlier. At the end, it checks to see if it added any courses; if it did not, it turns the ‘available’ variable to false, and the second loop breaks early. The second loop is the same as the first, but it’s made for the second class of the week, and its method of detecting if the class time doesn't work is a little bit different. If the second check does not work, it removes all occurrences of the name of the class.
 
+print_preferences(): uses user_pref to make a summary of user's input preferred times per day. loops over days and preference and prints.
+
+print_calendar(): uses get_column_width to create bordering lines for the terminal user interface. loops over each row and prints it in the calendar for better spacing.
+
+print_course_summary(): takes the calendar and loops over the columns to make a dictionary of courses which is separated by day and loops over the dictionary to print it.
+
+get_column_width(): uses 2D calendar array to loop over each cell and finds the max length within the cell. benchmark to create each cell for print_calendar().
