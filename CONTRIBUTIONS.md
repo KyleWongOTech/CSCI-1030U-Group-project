@@ -1,7 +1,7 @@
 | Name         | Planning       | Control Flow  | Collections  | Functions      |
 | :---         |:---            |:---           | :---         |:---            |
-|    Kyle      | 336ee2c        |  390576d      |  236ff30     |   5c422ad      | 
+|    Kyle      | m1: 336ee2c    |  m1:390576d      |  m1:236ff30     |   m1:5c422ad      | 
 |    Nathan    |                |               |              |                | 
 |    David     |                |               |              |                | 
-|    Mirah     |     f4a6537    |f4a6537,6f2e505|    f4a6537   |      f4a6537   | 
+|    Mirah     |  m1:f4a6537    |m1: f4a6537,6f2e505|    m1:f4a6537   |      m1:f4a6537   | 
 |    Hafsa     |                |               |              |                | 
