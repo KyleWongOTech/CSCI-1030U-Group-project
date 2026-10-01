@@ -1,10 +1,10 @@
 #section class that keeps track of what day and times the classes happen in
 
 def get_user_pref() -> list[list[str]]:
-    days = ["Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday "]
+    days = ["Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday ", "Saturday "]
     pref = []
 
-    print ("Time of day preferences:")
+    print("\nTime of day preferences:")
     print("1. Morning (08:00 - 12:00)")
     print("2. Afternoon (12:00 - 16:00)")
     print("3. Evening (16:00 - 20:00)")
@@ -235,23 +235,67 @@ testCourseList: list[course] = [CALC, PHY]
 
 newCalendar: list[list[course]] = course_maker(calendar, testCourseList)
 
+# which hours each preference choice covers
+PERIOD_HOURS = {
+    "Morning": "08:00 - 12:00",
+    "Afternoon": "12:00 - 16:00",
+    "Evening": "16:00 - 20:00",
+    "Any": "no preference",
+}
+
+
+def print_preferences(user_pref: list[list[str]]):
+    print("\nYour schedule with preferred times of day:")
+    for pref in user_pref:
+        day = pref[0].strip()
+        period = pref[1]
+        print(f"{day:<10}: {period:<10}({PERIOD_HOURS[period]})")
+    print("")
+
+
+def get_column_width(calendar: list[list[str]]) -> int:
+    # finding the max length of each string on the calendar
+    max_length = 0
+    for row in calendar:
+        for cell in row:
+            if len(cell.strip()) > max_length:      # strip() takes spaces out
+                max_length = len(cell.strip())
+    return max_length + 2
+
+
+def print_calendar(calendar: list[list[str]]):
+    column_width = get_column_width(calendar)
+    line = "-" * ((column_width + 1) * len(calendar[0]) - 1)
+
+    print(line)
+    for i in range(len(calendar)):
+        print("|".join(cell.strip().center(column_width) for cell in calendar[i]))
+        if i == 0:
+            print(line)      # divider under the day names
+    print(line)
+
+
+def print_course_summary(calendar: list[list[str]]):
+    courses_by_day = {}
+
+    # column 0 is the time, so days start at column 1
+    for col in range(1, len(calendar[0])):
+        day = calendar[0][col].strip()
+        courses_by_day[day] = []
+        for row in calendar[1:]:
+            name = row[col].strip()
+            if name != "" and name not in courses_by_day[day]:
+                courses_by_day[day].append(name)
+
+    print("Courses per day:\n")
+    for day in courses_by_day:
+        if len(courses_by_day[day]) == 0:
+            print(f"{day:<10}: Free")
+        else:
+            print(f"{day:<10}: " + ", ".join(courses_by_day[day]))
 
 user_pref = get_user_pref()
-print("\nYour schedule with preferred times of day:\n")
-for pref in user_pref:
-    print(pref[0].center(10) + ": " + pref[1].center(10))
-
-print("")
-
-# finding the max length of each string on the calendar
-max_length = 0
-for row in newCalendar:
-    for cell in row:
-        if len(cell.strip()) > max_length:      #strip() takes spaces out of
-            max_length = len(cell.strip()) 
-
-column_width = max_length + 2
-
-
-for row in newCalendar:
-    print("|".join(cell.strip().center(column_width) for cell in row))
+print_preferences(user_pref)
+print_calendar(newCalendar)
+print()
+print_course_summary(newCalendar)
