@@ -239,6 +239,10 @@ csci1061_labs = [CSCI1061ULABA, CSCI1061ULABB, CSCI1061ULABC, CSCI1061ULABD, CSC
 csci1050_lecs = [CSCI1050UA, CSCI1050UB, CSCI1050UC, CSCI1050UD]
 csci1050_labs = [CSCI1050ULABA, CSCI1050ULABB, CSCI1050ULABC, CSCI1050ULABD]
 
+CSCI1061 = course("CSCI 1061", csci1061_lecs[0], csci1061_labs[0])
+CSCI1050 = course("CSCI 1050", csci1050_lecs[0], csci1050_labs[0])
+# Creates CSCI courses with their required lab sections
+
 math1020_lecs = [MATH1020UA, MATH1020UB, MATH1020UC]
 math1020_tuts = [MATH1020UTUTA, MATH1020UTUTB, MATH1020UTUTC]
 
@@ -255,6 +259,30 @@ CALC = course("CALC 102", MATH1020UA, MATH1020UTUTA,)
 
 
 testCourseList: list[course] = [CALC, PHY]
+ 
+testCourseList = []
+# Lets the user choose which courses to add
+print("\nAvailable courses:")
+print("1. CALC 102")
+print("2. PHY 101")
+print("3. CSCI 1061")
+print("4. CSCI 1050")
+
+while True:
+    choice = input("Choose a course (0 to finish): ")
+
+    if choice == "0":
+        break
+    elif choice == "1":
+        testCourseList.append(CALC)
+    elif choice == "2":
+        testCourseList.append(PHY)#added 3 and 4 
+    elif choice == "3":
+        testCourseList.append(CSCI1061)
+    elif choice == "4":
+        testCourseList.append(CSCI1050)
+    else:
+        print("Invalid choice.")
 
 newCalendar: list[list[course]] = course_maker(calendar, testCourseList)
 
@@ -322,3 +350,4 @@ print_preferences(user_pref)
 print_calendar(newCalendar)
 print()
 print_course_summary(newCalendar)
+#test
