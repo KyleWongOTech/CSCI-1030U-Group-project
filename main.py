@@ -1,8 +1,11 @@
 #section class that keeps track of what day and times the classes happen in
 
-def get_user_pref() -> list[list[str]]:
-    days = ["Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday ", "Saturday "]
-    pref = []
+def get_user_pref() -> list[str]:
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    pref = ["monday: Any(08:00 - 20:00)","tuesday: Any(08:00 - 20:00)",
+            "wednesday: Any(08:00 - 20:00)","thursday: Any(08:00 - 20:00)",
+            "friday: Any(08:00 - 20:00)","saturday: Any(08:00 - 20:00)"]
+    userInput = ""
 
     print("\nTime of day preferences:")
     print("1. Morning (08:00 - 12:00)")
@@ -10,29 +13,33 @@ def get_user_pref() -> list[list[str]]:
     print("3. Evening (16:00 - 20:00)")
     print("4. No preference\n")
 
+    while userInput.lower()!="done":
+        userInput= input(f"\nInput the day you want to change your preference. When your done with your preferences type 'Done': ")
+        if userInput.lower() in days:
+            while True:
+                choose = input(f"\nPlease choose from 1-4 for {userInput}: ")
+                index = days.index(userInput.lower())
+    
+                if choose == "1":
+                    pref[index]=(f"{userInput.lower()}: Morning(08:00 - 12:00)")
+                    break
+    
+                elif choose == "2":
+                    pref[index]=(f"{userInput.lower()}: Afternoon(12:00 - 16:00)")
+                    break
+    
+                elif choose == "3":
+                    pref[index]=(f"{userInput.lower()}: Evening(16:00 - 20:00)")
+                    break
+    
+                elif choose == "4":
+                    pref[index]=(f"{userInput.lower()}: Any(08:00 - 20:00)")
+                    break
+    
+                else:
+                    print("Not a valid choice.")
 
-    for i in range(len(days)):
-        while True:
-            choose = input(f"Please choose from 1-4 for {days[i]}")
 
-            if choose == "1":
-                pref.append([days[i], "Morning"])
-                break
-
-            elif choose == "2":
-                pref.append([days[i], "Afternoon"])
-                break
-
-            elif choose == "3":
-                pref.append([days[i], "Evening"])
-                break
-
-            elif choose == "4":
-                pref.append([days[i], "Any"])
-                break
-
-            else:
-                print("Not a valid choice.")
 
 
     return pref
@@ -78,7 +85,7 @@ def course_maker(courses : list[list[course]], courseList:list[course]):
                 for j in range (0, len(courses)):
                     #checks to see if it's the end time of the first slot
                     if courseList[x].slot1.time_end==courses[j][0].replace(" ", ""):
-
+ 
                         #goes through the first list of the 2d array
                         for k in range (len(courses[0])):
 
@@ -267,13 +274,10 @@ PERIOD_HOURS = {
 }
 
 
-def print_preferences(user_pref: list[list[str]]):
+def print_preferences(user_pref: list[str]):
     print("\nYour schedule with preferred times of day:")
-    for pref in user_pref:
-        day = pref[0].strip()
-        period = pref[1]
-        print(f"{day:<10}: {period:<10}({PERIOD_HOURS[period]})")
-    print("")
+    for i in range(len(user_pref)):
+        print(f"{user_pref[i]}")
 
 
 def get_column_width(calendar: list[list[str]]) -> int:
