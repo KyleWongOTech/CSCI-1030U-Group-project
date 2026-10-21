@@ -13,3 +13,8 @@ print_calendar(): uses get_column_width to create bordering lines for the termin
 print_course_summary(): takes the calendar and loops over the columns to make a dictionary of courses which is separated by day and loops over the dictionary to print it.
 
 get_column_width(): uses 2D calendar array to loop over each cell and finds the max length within the cell. benchmark to create each cell for print_calendar().
+
+
+#Milestone 2
+
+Kyle's planned contribution: Implement the afternoon/evening preference, have the program add needed labs and/or tutorials when adding a lecture. Making it possible to save a calendar in a file and access it later using a name. Add command lines to add new courses.
