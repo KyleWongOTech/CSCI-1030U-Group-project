@@ -1,11 +1,107 @@
 #section class that keeps track of what day and times the classes happen in
 
+def print_preferences(pref: list[str]):
+    print("\nYour schedule with preferred times of day:")
+    for i in range(len(pref)):
+        print(f"{pref[i]}")
+
+
+def get_column_width(user_calender: list[list[str]]) -> int:
+    # finding the max length of each string on the calendar
+    max_length = 0
+    for row in user_calender:
+        for cell in row:
+            if len(cell.strip()) > max_length:      # strip() takes spaces out
+                max_length = len(cell.strip())
+    return max_length + 2
+
+
+def print_calendar(user_calender: list[list[str]]):
+    column_width = get_column_width(user_calender)
+    line = "-" * ((column_width + 1) * len(user_calender[0]) - 1)
+
+    print(line)
+    for i in range(len(user_calender)):
+        print("|".join(cell.strip().center(column_width) for cell in user_calender[i]))
+        if i == 0:
+            print(line)      # divider under the day names
+    print(line)
+
+
+def print_course_summary(user_calender: list[list[str]]):
+    courses_by_day = {}
+
+    # column 0 is the time, so days start at column 1
+    for col in range(1, len(user_calender[0])):
+        day = user_calender[0][col].strip()
+        courses_by_day[day] = []
+        for row in user_calender[1:]:
+            name = row[col].strip()
+            if name != "" and name not in courses_by_day[day]:
+                courses_by_day[day].append(name)
+
+    print("Courses per day:\n")
+    for day in courses_by_day:
+        if len(courses_by_day[day]) == 0:
+            print(f"{day:<10}: Free")
+        else:
+            print(f"{day:<10}: " + ", ".join(courses_by_day[day]))
+
+
+def place_lecture(available: bool, class_name: str, class_sec:Section, temp_cal=list[list[str]]) -> tuple[
+    type[list[list[str]]], bool]:
+    if class_sec is not None:
+        print(f"test5, {class_name}, {class_sec.day}")
+        for i in range (1, len(temp_cal)):
+            if not available:
+                break
+            if class_sec.time_start==temp_cal[i][0].replace(" ", ""):
+                print("clear 1")
+                for j in range (i, len(temp_cal)):
+                    print(f"{class_sec.time_end} == {temp_cal[j][0].replace(" ","")}\n {j} == {len(temp_cal)}")
+                    if class_sec.time_end==temp_cal[j][0].replace(" ", ""):
+                        print("clear 2")
+                        for k in range (len(temp_cal[0])):
+                            if class_sec.day==temp_cal[0][k].replace(" ", "") and "" == temp_cal[i][k]:
+                                print("clear 3")
+                                for l in range (i,j+1):
+                                    temp_cal[l][k] = class_name + " - " + class_sec.type_class
+
+                                break
+                            elif class_sec.day==temp_cal[0][k].replace(" ", "") and "" != temp_cal[i][k]:
+                                available=False
+
+                                break
+
+    return temp_cal, available
+
+def place_lab_tutorial(available: bool, className: str, mylist: list[Section], temp_cal=type[list[list[str]]]) :
+    if mylist is not None:
+        for i in range (0, len(mylist)):
+            print(available)
+            for j in range(0, len(temp_cal)):
+                if (className +" - " + mylist[i].type_class) not in temp_cal[j]:
+                    break
+
+            print(f"test4 {className}, {mylist[i].type_class}, length of list {len(mylist)}")
+            if not available:
+                break
+            temp_cal, available = place_lecture(available, className, mylist[i] ,temp_cal)
+            print(f"{available}")
+            if available == False and i<len(mylist):
+                print("why are you not looping")
+                available=True
+
+    print(f"test 9: {available}")
+    return temp_cal, available
+
+
 def get_user_pref() -> list[str]:
     days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
     pref = ["monday: Any(08:00 - 20:00)","tuesday: Any(08:00 - 20:00)",
             "wednesday: Any(08:00 - 20:00)","thursday: Any(08:00 - 20:00)",
             "friday: Any(08:00 - 20:00)","saturday: Any(08:00 - 20:00)"]
-    userInput = ""
+    userinput = ""
 
     print("\nTime of day preferences:")
     print("1. Morning (08:00 - 12:00)")
@@ -13,27 +109,27 @@ def get_user_pref() -> list[str]:
     print("3. Evening (16:00 - 20:00)")
     print("4. No preference\n")
 
-    while userInput.lower()!="done":
-        userInput= input(f"\nInput the day you want to change your preference. When your done with your preferences type 'Done': ")
-        if userInput.lower() in days:
+    while userinput.lower()!="done":
+        userinput= input(f"\nInput the day you want to change your preference. When your done with your preferences type 'Done': ")
+        if userinput.lower() in days:
             while True:
-                choose = input(f"\nPlease choose from 1-4 for {userInput}: ")
-                index = days.index(userInput.lower())
+                choose = input(f"\nPlease choose from 1-4 for {userinput}: ")
+                index = days.index(userinput.lower())
     
                 if choose == "1":
-                    pref[index]=(f"{userInput.lower()}: Morning(08:00 - 12:00)")
+                    pref[index]=f"{userinput.lower()}: Morning(08:00 - 12:00)"
                     break
     
                 elif choose == "2":
-                    pref[index]=(f"{userInput.lower()}: Afternoon(12:00 - 16:00)")
+                    pref[index]=f"{userinput.lower()}: Afternoon(12:00 - 16:00)"
                     break
     
                 elif choose == "3":
-                    pref[index]=(f"{userInput.lower()}: Evening(16:00 - 20:00)")
+                    pref[index]=f"{userinput.lower()}: Evening(16:00 - 20:00)"
                     break
     
                 elif choose == "4":
-                    pref[index]=(f"{userInput.lower()}: Any(08:00 - 20:00)")
+                    pref[index]=f"{userinput.lower()}: Any(08:00 - 20:00)"
                     break
     
                 else:
@@ -50,94 +146,66 @@ def get_user_pref() -> list[str]:
 
 
 
-class section:
-    def __init__(self, day: str, time_start: str, time_end: str):
+class Section:
+    def __init__(self, day: str, time_start: str, time_end: str, type_class:str):
         self.day=day
         self.time_start=time_start
         self.time_end=time_end
+        self.type_class=type_class
 
 #courses to keep track of the name and the sections that the classes happen in
-class course:
-    def __init__(self, name: str, slot1: section, slot2: section = None):
+class Course:
+    #used for classes with tutorials and labs
+    def __init__(self, name: str, slot1: Section, slot2: Section, lab: list[Section], tutorial:list[Section] ):
         self.name=name
         self.slot1=slot1
         self.slot2=slot2
+        self.lab=lab
+        self.tutorial=tutorial
+    #used for classes wwith tutorials
 
-# turns the time into minutes so that its easier to check for breaks  
+
+# turns the time into minutes so that it's easier to check for breaks
 def minutes(time):
     time=time.split(":")
     return int(time[0])*60+int(time[1])
 
-def course_maker(courses : list[list[course]], courseList:list[course]):
+def course_maker(courses : list[list[str]], courselist:list[Course]):
 
 
     #goes through the list of course objects
-    for x in range (len(courseList)):
+    for x in range (len(courselist)):
         #used later
         available = True
+        skip = False
 
-        #goes through the list in the list of courses
-        for i in range (1, len(courses)):
-            #checks to see if it's the start time of the first slot, *replace() lets us format the calendar
-            if courseList[x].slot1.time_start==courses[i][0].replace(" ", ""):
+        #lecture 1
+        courses, available=place_lecture(available, courselist[x].name, courselist[x].slot1, courses)
+        print_calendar(courses)
 
-                #goes through the list of list again
-                for j in range (0, len(courses)):
-                    #checks to see if it's the end time of the first slot
-                    if courseList[x].slot1.time_end==courses[j][0].replace(" ", ""):
- 
-                        #goes through the first list of the 2d array
-                        for k in range (len(courses[0])):
+        #lecture 2
+        courses, available=place_lecture(available, courselist[x].name, courselist[x].slot2, courses)
+        print_calendar(courses)
 
-                            #
-                            if courseList[x].slot1.day==courses[0][k].replace(" ", "") and courses[i][k]== "":
+        #tutorial
+        courses, available = place_lab_tutorial(available, courselist[x].name, courselist[x].tutorial, courses)
+        print_calendar(courses)
 
-                                #gets the start and end time for each class
-                                start=minutes(courseList[x].slot1.time_start)
-                                end=minutes(courseList[x].slot1.time_end)
-
-                                # goes through all the times on specific days
-                                for row in range (1, len(courses)):
-                                    row_time=minutes(courses[row][0].replace(" ", ""))
-
-                                    #chceks 30 mins before and after the class 
-                                    if row_time>start-30 and row_time<end+30:
-
-                                        #if another class is there, it will not add the break to the schedule
-                                        if courses[row][k]!="":
-                                            available=False
-                    
-
-                                if available:
-                                    for l in range (i,j+1):
-                                        courses[l][k] = courseList[x].name
-
-        available= any(courseList[x].name in Slots for Slots in courses)
-
-
-        #slot 2 for lectures
-        if courseList[x].slot2 is not None:
-            for i in range (1, len(courses)):
-                if(not available):
-                    break
-                if courseList[x].slot2.time_start==courses[i][0].replace(" ", ""):
-                    for j in range (i, len(courses)):
-                        if courseList[x].slot2.time_end==courses[j][0].replace(" ", ""):
-                            for k in range (len(courses[0])):
-                                if courseList[x].slot2.day==courses[0][k].replace(" ", "") and courses[i][k]== "":
-                                    for l in range (i,j+1):
-                                        courses[l][k] = courseList[x].name
-                                elif courseList[x].slot2.day==courses[0][k].replace(" ", "") and courses[i][k]!= "":
-                                    available=False
-                                    print("f")
+        #lab
+        courses, available = place_lab_tutorial(available, courselist[x].name, courselist[x].lab, courses)
+        print(f"test8 {available}")
+        print_calendar(courses)
+        print(f"test8 {available}")
 
         if not available:
             for i in range (len(courses)):
                 for j in range(len(courses[i])):
 
-                    if courses[i][j]==courseList[x].name:
+                    if courselist[x].name in courses[i][j]:
 
                         courses[i][j]=""
+                        print(f"test6 {courses[i][j]}")
+
 
     return courses
 
@@ -198,45 +266,49 @@ calendar: list[list[str]] = [["  Time    ", "Monday", "Tuesday", "Wednesday", "T
 
 
 
-CSCI1061UA=section("Tuesday", "15:40", "17:00")
-CSCI1061UB=section("Thursday", "15:40", "17:00")
-CSCI1061UC=section("Thursday", "14:10", "15:30")
-CSCI1061UD=section("Monday", "14:10", "15:30")
+CSCI1061UA=Section("Tuesday", "15:40", "17:00", "lecture")
+CSCI1061UB=Section("Thursday", "15:40", "17:00", "lecture")
+CSCI1061UC=Section("Thursday", "14:10", "15:30", "lecture")
+CSCI1061UD=Section("Monday", "14:10", "15:30", "lecture")
 
-CSCI1061ULABA=section("Tuesday", "17:10", "20:00")
-CSCI1061ULABB=section("Friday", "14:10", "17:00")
-CSCI1061ULABC=section("Thursday", "17:10", "20:00")
-CSCI1061ULABD=section("Tuesday", "08:10", "11:00")
-CSCI1061ULABE=section("Friday", "08:10", "11:00")
+CSCI1061ULABA=Section("Tuesday", "17:10", "20:00", "lab")
+CSCI1061ULABB=Section("Friday", "14:10", "17:00", "lab")
+CSCI1061ULABC=Section("Thursday", "17:10", "20:00", "lab")
+CSCI1061ULABD=Section("Tuesday", "08:10", "11:00", "lab")
+CSCI1061ULABE=Section("Friday", "08:10", "11:00","lab")
 
 
 #CSCI 1050U arch
 
-CSCI1050UA=section("Thursday", "12:40", "14:00")
-CSCI1050UB=section("Wednesday", "12:40", "14:00")
-CSCI1050UC=section("Thursday", "12:40", "14:00")
-CSCI1050UD=section("Wednesday", "12:40", "14:00")
+CSCI1050UA=Section("Thursday", "12:40", "14:00", "lecture")
+CSCI1050UB=Section("Wednesday", "12:40", "14:00", "lecture")
+CSCI1050UC=Section("Thursday", "12:40", "14:00", "lecture")
+CSCI1050UD=Section("Wednesday", "12:40", "14:00", "lecture")
 
-CSCI1050ULABA=section("Thursday", "08:10", "11:00")
-CSCI1050ULABB=section("Tuesday", "14:10", "17:00")
-CSCI1050ULABC=section("Tuesday", "11:10", "14:00")
-CSCI1050ULABD=section("Tuesday", "17:10", "20:00")
+CSCI1050ULABA=Section("Thursday", "08:10", "11:00", "lab")
+CSCI1050ULABB=Section("Tuesday", "14:10", "17:00", "lab")
+CSCI1050ULABC=Section("Tuesday", "11:10", "14:00", "lab")
+CSCI1050ULABD=Section("Tuesday", "17:10", "20:00", "lab")
 
 
 #MATH 1020U  calc II
 
-MATH1020UA=section("Wednesday", "08:10", "09:30")
-MATH1020UB=section("Monday", "12:10", "13:30")
-MATH1020UC=section("Friday", "17:10", "18:30")
+MATH1020UA=Section("Wednesday", "08:10", "09:30", "lecture")
+MATH1020UB=Section("Monday", "12:10", "13:30", "lecture")
+MATH1020UC=Section("Friday", "17:10", "18:30", "lecture")
 
-MATH1020UTUTA=section("Thursday", "08:10", "09:30")
-MATH1020UTUTB=section("Tuesday", "08:10", "09:30")
-MATH1020UTUTC=section("Wednesday", "08:10", "09:30")
+MATH1020UTUTA=Section("Thursday", "08:10", "09:30", "tutorial")
+MATH1020UTUTB=Section("Tuesday", "08:10", "09:30", "tutorial")
+MATH1020UTUTC=Section("Wednesday", "08:10", "09:30", "tutorial")
 
 #PHY 1020U Physcis II
 
-PHY1020UA=section("Wednesday", "12:40", "14:00")
-PHY1020UB=section("Thursday", "12:40", "14:00")
+PHY1020UA=Section("Wednesday", "12:40", "14:00", "lecture")
+PHY1020UB=Section("Thursday", "12:40", "14:00", "lecture")
+PHYLAB1 = Section("Tuesday", "08:10", "09:30", "Lab")
+PHYLAB2 = Section("Friday", "17:10", "20:10", "Lab")
+PHYTUT1 = Section("Monday", "08:10", "10:30", "Tutorial")
+PHYTUT2 = Section("Friday", "17:10", "20:00", "Tutorial")
 
 
 
@@ -246,52 +318,53 @@ csci1061_labs = [CSCI1061ULABA, CSCI1061ULABB, CSCI1061ULABC, CSCI1061ULABD, CSC
 csci1050_lecs = [CSCI1050UA, CSCI1050UB, CSCI1050UC, CSCI1050UD]
 csci1050_labs = [CSCI1050ULABA, CSCI1050ULABB, CSCI1050ULABC, CSCI1050ULABD]
 
-CSCI1061 = course("CSCI 1061", csci1061_lecs[0], csci1061_labs[0])
-CSCI1050 = course("CSCI 1050", csci1050_lecs[0], csci1050_labs[0])
+CSCI1061 = Course("CSCI 1061", csci1061_lecs[0], csci1061_labs[0], None, None)
+CSCI1050 = Course("CSCI 1050", csci1050_lecs[0], csci1050_labs[0], None, None)
 # Creates CSCI courses with their required lab sections
 
 math1020_lecs = [MATH1020UA, MATH1020UB, MATH1020UC]
 math1020_tuts = [MATH1020UTUTA, MATH1020UTUTB, MATH1020UTUTC]
 
 phy1020_lecs = [PHY1020UA, PHY1020UB]
+phy1020_labs = [PHYLAB1, PHYLAB2]
+phy1020_tuts = [PHYTUT1, PHYTUT2]
 
 
 
 
 
 
-PHY = course("PHY 101", PHY1020UA, PHY1020UB,)
+PHY = Course("PHY 101", PHY1020UA, PHY1020UB, phy1020_labs, phy1020_tuts)
 
-CALC = course("CALC 102", MATH1020UA, MATH1020UTUTA,)
+CALC = Course("CALC 102", MATH1020UA, MATH1020UB, None, math1020_tuts)
 
 
-testCourseList: list[course] = [CALC, PHY]
+testCourseList: list[Course] = [CALC, PHY]
  
-testCourseList = []
+
 # Lets the user choose which courses to add
-print("\nAvailable courses:")
-print("1. CALC 102")
-print("2. PHY 101")
-print("3. CSCI 1061")
-print("4. CSCI 1050")
+#print("\nAvailable courses:")
+#print("1. CALC 102")
+#print("2. PHY 101")
+#print("3. CSCI 1061")
+#print("4. CSCI 1050")
 
-while True:
-    choice = input("Choose a course (0 to finish): ")
+#while True:
+#    choice = input("Choose a course (0 to finish): ")
 
-    if choice == "0":
-        break
-    elif choice == "1":
-        testCourseList.append(CALC)
-    elif choice == "2":
-        testCourseList.append(PHY)#added 3 and 4 
-    elif choice == "3":
-        testCourseList.append(CSCI1061)
-    elif choice == "4":
-        testCourseList.append(CSCI1050)
-    else:
-        print("Invalid choice.")
+#    if choice == "0":
+#        break
+#    elif choice == "1":
+#        testCourseList.append(CALC)
+#    elif choice == "2":
+#        testCourseList.append(PHY)#added 3 and 4
+#    elif choice == "3":
+#        testCourseList.append(CSCI1061)
+#    elif choice == "4":
+#        testCourseList.append(CSCI1050)
+#    else:
+#        print("Invalid choice.")
 
-newCalendar: list[list[course]] = course_maker(calendar, testCourseList)
 
 # which hours each preference choice covers
 PERIOD_HOURS = {
@@ -302,55 +375,11 @@ PERIOD_HOURS = {
 }
 
 
-def print_preferences(user_pref: list[str]):
-    print("\nYour schedule with preferred times of day:")
-    for i in range(len(user_pref)):
-        print(f"{user_pref[i]}")
-
-
-def get_column_width(calendar: list[list[str]]) -> int:
-    # finding the max length of each string on the calendar
-    max_length = 0
-    for row in calendar:
-        for cell in row:
-            if len(cell.strip()) > max_length:      # strip() takes spaces out
-                max_length = len(cell.strip())
-    return max_length + 2
-
-
-def print_calendar(calendar: list[list[str]]):
-    column_width = get_column_width(calendar)
-    line = "-" * ((column_width + 1) * len(calendar[0]) - 1)
-
-    print(line)
-    for i in range(len(calendar)):
-        print("|".join(cell.strip().center(column_width) for cell in calendar[i]))
-        if i == 0:
-            print(line)      # divider under the day names
-    print(line)
-
-
-def print_course_summary(calendar: list[list[str]]):
-    courses_by_day = {}
-
-    # column 0 is the time, so days start at column 1
-    for col in range(1, len(calendar[0])):
-        day = calendar[0][col].strip()
-        courses_by_day[day] = []
-        for row in calendar[1:]:
-            name = row[col].strip()
-            if name != "" and name not in courses_by_day[day]:
-                courses_by_day[day].append(name)
-
-    print("Courses per day:\n")
-    for day in courses_by_day:
-        if len(courses_by_day[day]) == 0:
-            print(f"{day:<10}: Free")
-        else:
-            print(f"{day:<10}: " + ", ".join(courses_by_day[day]))
 
 user_pref = get_user_pref()
+
 print_preferences(user_pref)
+newCalendar: list[list[Course]] = course_maker(calendar, testCourseList)
 print_calendar(newCalendar)
 print()
 print_course_summary(newCalendar)
