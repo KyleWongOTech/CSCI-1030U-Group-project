@@ -51,21 +51,16 @@ def print_course_summary(user_calender: list[list[str]]):
 def place_lecture(available: bool, class_name: str, class_sec:Section, temp_cal=list[list[str]]) -> tuple[
     type[list[list[str]]], bool]:
     if class_sec is not None:
-        print(f"test5, {class_name}, {class_sec.day}")
+
         for i in range (1, len(temp_cal)):
             if not available:
                 break
             if class_sec.time_start==temp_cal[i][0].replace(" ", ""):
-                print("clear 1")
                 for j in range (i, len(temp_cal)):
-                    print(f"{class_sec.time_end} == {temp_cal[j][0].replace(" ","")}\n {j} == {len(temp_cal)}")
                     if class_sec.time_end==temp_cal[j][0].replace(" ", ""):
-                        print("clear 2")
                         for k in range (len(temp_cal[0])):
                             if class_sec.day==temp_cal[0][k].replace(" ", "") and "" == temp_cal[i][k]:
-                                print("clear 3")
-                                for l in range (i,j+1):
-                                    temp_cal[l][k] = class_name + " - " + class_sec.type_class
+                                temp_cal=recursion(k,i,j,class_name, class_sec.type_class, temp_cal)
 
                                 break
                             elif class_sec.day==temp_cal[0][k].replace(" ", "") and "" != temp_cal[i][k]:
@@ -75,24 +70,29 @@ def place_lecture(available: bool, class_name: str, class_sec:Section, temp_cal=
 
     return temp_cal, available
 
-def place_lab_tutorial(available: bool, className: str, mylist: list[Section], temp_cal=type[list[list[str]]]) :
-    if mylist is not None:
-        for i in range (0, len(mylist)):
-            print(available)
-            for j in range(0, len(temp_cal)):
-                if (className +" - " + mylist[i].type_class) not in temp_cal[j]:
-                    break
+def recursion(row: int, col:int, last_col:int, class_name:str, class_type: str, temp_cal)-> type[list[list[str]]]:
+    if last_col == col:
+        return temp_cal
 
-            print(f"test4 {className}, {mylist[i].type_class}, length of list {len(mylist)}")
+    temp_cal[col][row] = class_name + " - " + class_type
+    col+=1
+
+    return recursion(row, col, last_col, class_name, class_type, temp_cal)
+
+def place_lab_tutorial(available: bool, className: str, mylist: list[Section], temp_cal=type[list[list[str]]]) :
+    alreadyIn:bool
+    if mylist is not None:
+        for q in range (len(mylist)):
+            alreadyIn = False
+            for r in range(len(temp_cal)):
+                if (className +" - " + mylist[q].type_class) in temp_cal[r]:
+                    alreadyIn=True
             if not available:
                 break
-            temp_cal, available = place_lecture(available, className, mylist[i] ,temp_cal)
-            print(f"{available}")
-            if available == False and i<len(mylist):
-                print("why are you not looping")
-                available=True
-
-    print(f"test 9: {available}")
+            if not alreadyIn:
+                temp_cal, available = place_lecture(available, className, mylist[q] ,temp_cal)
+                if available == False and q<len(mylist):
+                    available=True
     return temp_cal, available
 
 
@@ -181,21 +181,15 @@ def course_maker(courses : list[list[str]], courselist:list[Course]):
 
         #lecture 1
         courses, available=place_lecture(available, courselist[x].name, courselist[x].slot1, courses)
-        print_calendar(courses)
 
         #lecture 2
         courses, available=place_lecture(available, courselist[x].name, courselist[x].slot2, courses)
-        print_calendar(courses)
 
         #tutorial
         courses, available = place_lab_tutorial(available, courselist[x].name, courselist[x].tutorial, courses)
-        print_calendar(courses)
 
         #lab
         courses, available = place_lab_tutorial(available, courselist[x].name, courselist[x].lab, courses)
-        print(f"test8 {available}")
-        print_calendar(courses)
-        print(f"test8 {available}")
 
         if not available:
             for i in range (len(courses)):
@@ -204,7 +198,7 @@ def course_maker(courses : list[list[str]], courselist:list[Course]):
                     if courselist[x].name in courses[i][j]:
 
                         courses[i][j]=""
-                        print(f"test6 {courses[i][j]}")
+
 
 
     return courses
