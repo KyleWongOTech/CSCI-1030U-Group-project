@@ -1,4 +1,54 @@
+import argparse
+
 #section class that keeps track of what day and times the classes happen in
+class Section:
+    def __init__(self, day: str, time_start: str, time_end: str, type_class:str):
+        self.day=day
+        self.time_start=time_start
+        self.time_end=time_end
+        self.type_class=type_class
+
+#courses to keep track of the name and the sections that the classes happen in
+class Course:
+    #used for all classes
+    def __init__(self, name: str, slot1: Section, slot2: Section, lab: list[Section], tutorial:list[Section] ):
+        self.name=name
+        self.slot1=slot1
+        self.slot2=slot2
+        self.lab=lab
+        self.tutorial=tutorial
+
+def add_user_cal(user:str, Calender:list[list[str]]):
+    with open("User_Calender.txt", "a") as f:
+        f.write(f"{user}\n")
+        for i in range(len(Calender)):
+            f.write(f"{Calender[i]}\n")
+        f.write("------------------\n\n")
+
+def read_user_cal(user:str, cal:list[list[str]]) -> list[list[str]]:
+
+    found:bool=False
+    col: int = 0
+    row: int = 0
+    with open("User_Calender.txt") as f:
+        for line in f:
+            if line.lower()==user.lower():
+                found=True
+            if found:
+                for char in line:
+                    if char==',':
+                        row+=1
+                    elif char!=" " or char!="'":
+                        cal[col][row]= cal[col][row]+char
+            col+=1
+            if col==len(cal)-1:
+                break
+    if not found:
+        return None
+    return cal
+
+
+
 
 def print_preferences(pref: list[str]):
     print("\nYour schedule with preferred times of day:")
@@ -139,38 +189,13 @@ def get_user_pref() -> list[str]:
 
 
     return pref
-            
-
-
-
-
-
-
-class Section:
-    def __init__(self, day: str, time_start: str, time_end: str, type_class:str):
-        self.day=day
-        self.time_start=time_start
-        self.time_end=time_end
-        self.type_class=type_class
-
-#courses to keep track of the name and the sections that the classes happen in
-class Course:
-    #used for classes with tutorials and labs
-    def __init__(self, name: str, slot1: Section, slot2: Section, lab: list[Section], tutorial:list[Section] ):
-        self.name=name
-        self.slot1=slot1
-        self.slot2=slot2
-        self.lab=lab
-        self.tutorial=tutorial
-    #used for classes wwith tutorials
-
 
 # turns the time into minutes so that it's easier to check for breaks
 def minutes(time):
     time=time.split(":")
     return int(time[0])*60+int(time[1])
 
-def course_maker(courses : list[list[str]], courselist:list[Course]):
+def course_maker(courses : list[list[str]], courselist:list[Course]) -> list[list[str]]:
 
 
     #goes through the list of course objects
@@ -202,7 +227,6 @@ def course_maker(courses : list[list[str]], courselist:list[Course]):
 
 
     return courses
-
 
 
 #initializes the course schedule
@@ -373,8 +397,13 @@ PERIOD_HOURS = {
 user_pref = get_user_pref()
 
 print_preferences(user_pref)
-newCalendar: list[list[Course]] = course_maker(calendar, testCourseList)
+newCalendar: list[list[str]] = course_maker(calendar, testCourseList)
 print_calendar(newCalendar)
 print()
 print_course_summary(newCalendar)
 #test
+
+add_user_cal("Kyle", newCalendar)
+cal_temp=  read_user_cal("Mirah", calendar)
+
+
