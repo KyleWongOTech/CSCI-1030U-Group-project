@@ -21,3 +21,12 @@ David: user matching to preferences to calendar, create algorithm
 |    David     |                |                   |              |                | 
 |    Mirah     |  m1:f4a6537    |m1: f4a6537,6f2e505| m1:f4a6537   |   m1:f4a6537   | 
 |    Hafsa     |  m1:bc1bf0c    | m1:bc1bf0c        |  m1:bc1bf0c  |   m1:bc1bf0c | 
+
+Milestone 2:
+| Name         | OPP       |  File I/O      | Recursion  | Command-line args      | Interface |
+| :---         |:---            |:---               | :---         |:---            | :---|
+|    Kyle      |  b4df880   |    c61a86b   | c0b9981 | 4c8d2e5  | b087b1c |
+|    Nathan    |    |      |  |    | |
+|    David     |                |                   |              |                | |
+|    Mirah     |      ||  |    | |
+|    Hafsa     |      |        |  |   | |
