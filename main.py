@@ -1,4 +1,6 @@
 import argparse
+import tkinter as tk
+from tkinter import font as tkFont
 
 #section class that keeps track of what day and times the classes happen in
 class Section:
@@ -25,7 +27,7 @@ def add_user_cal(user:str, Calender:list[list[str]]):
             f.write(f"{Calender[i]}\n")
         f.write("------------------\n\n")
 
-def read_user_cal(user:str, cal:list[list[str]]) -> list[list[str]]:
+def read_user_cal(user:str, cal:list[list[str]]) -> list[list[str]]|None:
 
     found:bool=False
     col: int = 0
@@ -145,50 +147,68 @@ def place_lab_tutorial(available: bool, className: str, mylist: list[Section], t
                     available=True
     return temp_cal, available
 
-
-def get_user_pref() -> list[str]:
+def check_day() -> None:
     days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
-    pref = ["monday: Any(08:00 - 20:00)","tuesday: Any(08:00 - 20:00)",
-            "wednesday: Any(08:00 - 20:00)","thursday: Any(08:00 - 20:00)",
-            "friday: Any(08:00 - 20:00)","saturday: Any(08:00 - 20:00)"]
-    userinput = ""
+    userInput:str= inputTxt.get("1.0", "end-1c")
+    print(userInput)
+    if userInput in days:
+        inputTxt.delete("1.0","end-1c")
+        get_user_pref_tk_pref(userInput)
+    elif userInput == "done":
+        time_preference.grid_forget()
+        inputTxt.grid_forget()
+        confirmButton.grid_forget()
+        prefButton.grid(row=1,column=1, sticky='ENSW')
 
-    print("\nTime of day preferences:")
-    print("1. Morning (08:00 - 12:00)")
-    print("2. Afternoon (12:00 - 16:00)")
-    print("3. Evening (16:00 - 20:00)")
-    print("4. No preference\n")
+def check_pref(day) ->None:
+    userInput:str = inputTxt.get("1.0", "end-1c")
+    if userInput in ["1","2","3","4"]:
+        inputTxt.delete("1.0","end-1c")
+        get_user_pref(day, userInput)
 
-    while userinput.lower()!="done":
-        userinput= input(f"\nInput the day you want to change your preference. When your done with your preferences type 'Done': ")
-        if userinput.lower() in days:
-            while True:
-                choose = input(f"\nPlease choose from 1-4 for {userinput}: ")
-                index = days.index(userinput.lower())
-    
-                if choose == "1":
-                    pref[index]=f"{userinput.lower()}: Morning(08:00 - 12:00)"
-                    break
-    
-                elif choose == "2":
-                    pref[index]=f"{userinput.lower()}: Afternoon(12:00 - 16:00)"
-                    break
-    
-                elif choose == "3":
-                    pref[index]=f"{userinput.lower()}: Evening(16:00 - 20:00)"
-                    break
-    
-                elif choose == "4":
-                    pref[index]=f"{userinput.lower()}: Any(08:00 - 20:00)"
-                    break
-    
-                else:
-                    print("Not a valid choice.")
+def get_user_pref_tk_day() ->None:
+    prefButton.grid_forget()
+
+    time_preference.config(text="\nChoose a day of the week \n from Monday to Saturday", font=bigFont)
+    time_preference.grid(row=0,column=1, sticky='ENSW')
+    inputTxt.config(height = 15, width=20, font=bigFont)
+    inputTxt.grid(row=1, column=1, sticky='ENW')
+    confirmButton.config(text="Confirm Choice", height=5, command=lambda : check_day())
+    confirmButton.grid(row=1, column=1, sticky='ESW')
+
+def get_user_pref_tk_pref(day:str) ->None:
+
+    time_preference.config(text="\nTime of day preferences:\n1. Morning (08:00 - 12:00)"
+                                +"\n2. Afternoon (12:00 - 16:00)\n3. Evening (16:00 - 20:00)"
+                                +"\n4. No preference\n", font=bigFont)
+    time_preference.grid(row=0,column=1, sticky='ENSW')
+    inputTxt.config(height = 15, width=20, font=bigFont)
+    inputTxt.grid(row=1, column=1, sticky='ENW')
+    confirmButton.config(text="Confirm Choice", height=5, command=lambda : check_pref(day))
+    confirmButton.grid(row=1, column=1, sticky='ESW')
 
 
+def get_user_pref(day:str, choose:str) -> None:
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    global user_pref
+
+    index = days.index(day)
+    if choose == "1":
+        user_pref[index]=f"{day.lower()}: Morning(08:00 - 12:00)"
+
+    elif choose == "2":
+        user_pref[index]=f"{day.lower()}: Afternoon(12:00 - 16:00)"
+
+    elif choose == "3":
+        user_pref[index]=f"{day.lower()}: Evening(16:00 - 20:00)"
+
+    elif choose == "4":
+        user_pref[index]=f"{day.lower()}: Any(08:00 - 20:00)"
+
+    else:
+        print("Not a valid choice.")
 
 
-    return pref
 
 # turns the time into minutes so that it's easier to check for breaks
 def minutes(time):
@@ -392,8 +412,25 @@ PERIOD_HOURS = {
     "Any": "no preference",
 }
 
+user_pref:list[str] = ["monday: Any(08:00 - 20:00)","tuesday: Any(08:00 - 20:00)",
+                       "wednesday: Any(08:00 - 20:00)","thursday: Any(08:00 - 20:00)",
+                       "friday: Any(08:00 - 20:00)","saturday: Any(08:00 - 20:00)"]
 
-user_pref = get_user_pref()
+root = tk.Tk()
+root.title("Calender")
+root.geometry("1200x700")
+root.grid_rowconfigure((0,1,2), weight=1,  uniform="a")
+root.grid_columnconfigure((0,1,2), weight=1,  uniform="a")
+
+time_preference = tk.Label(root)
+inputTxt = tk.Text(root)
+confirmButton = tk.Button(root)
+
+bigFont = tkFont.Font(family="Ariel", size=20, weight="bold")
+prefButton =tk.Button(root, text="Preference Button",font=bigFont, command=lambda :get_user_pref_tk_day(),bd=1)
+prefButton.grid(row=1,column=1, sticky='ENSW')
+root.mainloop()
+
 
 print_preferences(user_pref)
 newCalendar: list[list[str]] = course_maker(calendar, testCourseList)
