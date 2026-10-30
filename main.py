@@ -393,7 +393,6 @@ PERIOD_HOURS = {
 }
 
 
-
 user_pref = get_user_pref()
 
 print_preferences(user_pref)
@@ -403,7 +402,12 @@ print()
 print_course_summary(newCalendar)
 #test
 
-add_user_cal("Kyle", newCalendar)
-cal_temp=  read_user_cal("Mirah", calendar)
+parser = argparse.ArgumentParser(prog="name", description="used to get the name of the user")
+parser.add_argument("name", help="what name to save for the calender")
+
+args = parser.parse_args()
+
+add_user_cal(args.name, newCalendar)
+cal_temp=  read_user_cal(args.name, calendar)
 
 
