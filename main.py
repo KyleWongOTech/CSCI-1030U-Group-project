@@ -1,6 +1,7 @@
 import argparse
 import tkinter as tk
 from tkinter import font as tkFont
+import json
 
 #section class that keeps track of what day and times the classes happen in
 class Section:
@@ -19,6 +20,36 @@ class Course:
         self.slot2=slot2
         self.lab=lab
         self.tutorial=tutorial
+
+#stores the students schedule preferences 
+class SchedulePreferences:
+    def __init__(self, min_break=30, days_off=None, priority="balanced"):
+        self.min_break = int(min_break)
+        self.priority = priority
+        if days_off is None:
+            self.days_off = []
+        else:
+            self.days_off = days_off
+    #converts preferencs into a dictionary
+    def to_dict(self):
+        return {
+            "min_break": self.min_break,
+            "days_off": self.days_off,
+            "priority": self.priority
+        }
+    #saves preferences to a json file
+    def save_to_json(self, filename):
+        with open(filename, "w") as f:
+            json.dump(self.to_dict(), f, indent=4)
+    #loads previous preferences from a json file
+    def load_from_json(self, filename):
+        with open(filename, "r") as f:
+            data = json.load(f)
+            self.min_break = data["min_break"]
+            self.days_off = data["days_off"]
+            self.priority = data["priority"]
+
+
 
 def add_user_cal(user:str, Calender:list[list[str]]):
     with open("User_Calender.txt", "a") as f:
@@ -215,6 +246,40 @@ def minutes(time):
     time=time.split(":")
     return int(time[0])*60+int(time[1])
 
+#checks if the break between two classes is enough
+def enough_break (section1, section2, break_time):
+    if section1.day != section2.day:
+        return True
+    start1=minutes(section1.time_start)
+    end1=minutes(section1.time_end)
+    start2=minutes(section2.time_start)
+    end2=minutes(section2.time_end)
+
+    # Check if there's an overlap
+    if end1 + break_time <= start2:
+        return True
+    if end2 + break_time <= start1:
+        return True
+    return False
+
+#check if a class is on a day the student wants off
+def allowed_day(section, days_off):
+    if section.day in days_off:
+        return False
+    return True
+
+#checks if a class follows all the studens preferences
+def can_add(section, selected, preferences):
+    #checks if the students wants this day off
+    if not allowed_day(section, preferences.days_off):
+        return False
+    #check the break between this class and existing classes
+    for old_section, old_name in selected:
+        if not enough_break(section, old_section, preferences.min_break):
+            return False
+    #all checks passed
+    return True
+
 def course_maker(courses : list[list[str]], courselist:list[Course]) -> list[list[str]]:
 
 
@@ -248,6 +313,121 @@ def course_maker(courses : list[list[str]], courselist:list[Course]) -> list[lis
 
     return courses
 
+#create possible combinations of courses 
+def course_options(course):
+    required=[]
+    #add the required sections to the list
+    if course.slot1 is not None:
+        required.append(course.slot1)
+    if course.slot2 is not None:
+        required.append(course.slot2)
+
+    #get the available labs and tutorials
+    labs=course.lab if course.lab else [None]
+    tutorials=course.tutorial if course.tutorial else [None]
+
+    choices=[]
+
+    #try all combinations of labs and tutorials
+    for lab in labs:
+        for tutorial in tutorials:
+           sections=required[:]
+           if lab is not None:
+               sections.append(lab) 
+           if tutorial is not None:
+               sections.append(tutorial)
+           choices.append(sections)
+    return choices
+
+#generates possible schedule using recursion
+def generate_schedule(courses, preferences):
+    results=[]
+
+    #recursive function
+    def try_courses(index, selected):
+        #base case- all courses have been considered
+        if index==len(courses):
+            results.append(selected[:1])
+            return
+
+        # get the current course
+        course=courses[index]
+
+        #try each possible section combination
+        for option in course_options(course):
+            new_selected=selected[:]
+            valid=True
+
+            #check each section in this combination
+            for section in option:
+                if not can_add(section, new_selected, preferences):
+                    valid=False
+                    break
+                new_selected.append((section, course.name))
+
+            #recursion- if valid, move to the next course
+            if valid:
+                try_courses(index+1, new_selected)
+
+    #start checking from the first course
+    try_courses(0, [])
+    return results
+
+#calculates information about a schedule
+def schedule_stats(selected):
+    days={}
+    #organize classes by day
+    for section, name in selected:
+        if section.day not in days:
+            days[section.day]=[]
+        days[section.day].append(section)
+
+    gap_minutes=0
+    early_classes=0
+    day_spread=0
+
+    #check the classes on each day
+    for day in days:
+
+        #functipn to get the starting time of a class
+        def start_time(section):
+            return minutes(section.time_start)
+        
+        #sort classes from earliest to latest
+        sections=sorted(days[day], key=start_time)
+
+        #calculate how long the student is on campus
+        day_spread += (minutes(sections[-1].time_end) - minutes(sections[0].time_start))
+
+        #count classes starting before 10am
+        if minutes(sections[0].time_start)< minutes("10:00"):
+            early_classes+=1
+
+        #calculate the gaps between classes
+        for i in range(len(sections)-1):
+            gap_minutes += (minutes(sections[i+1].time_start) - minutes(sections[i].time_end))
+    return len(days), gap_minutes, early_classes, day_spread
+
+
+#gives each schedule a score based on the students preferences
+def score_schedule(selected, preferences):
+    #get the schedule info
+    days, gaps, early, spread = schedule_stats(selected)
+
+    #student wants fewer days on campus
+    if priority=="fewer_days":
+        return days*10000+gaps
+
+    #student wants shorter gaps between classes
+    if priority=="shorter_gaps":
+        return gaps*100+days
+
+    #student wants to avoid early classes
+    if priority=="avoid_early":
+        return early*10000+days*100+gaps
+
+    #default balanced
+    return days*10 +gaps/30+early*5+spread/120
 
 #initializes the course schedule
 
