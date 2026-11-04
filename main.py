@@ -25,6 +25,7 @@ class Course:
 class SchedulePreferences:
     def __init__(self, min_break=30, days_off=None, priority="balanced"):
         self.min_break = int(min_break)
+        #priority can be "balanced", "breaks", or "days_off"
         self.priority = priority
         if days_off is None:
             self.days_off = []
@@ -262,6 +263,22 @@ def enough_break (section1, section2, break_time):
         return True
     return False
 
+#checks if 2 classes overlap
+def overlap(section1, section2):
+    #classes on different days don't overlap
+    if section1.day != section2.day:
+        return False
+    #convert times to minutes for easier comparison
+    start1 = minutes(section1.time_start)
+    end1 = minutes(section1.time_end)
+    start2 = minutes(section2.time_start)
+    end2 = minutes(section2.time_end)
+
+    #check for overlap
+    if start1 < end2 and start2 < end1:
+        return True
+    return False
+
 #check if a class is on a day the student wants off
 def allowed_day(section, days_off):
     if section.day in days_off:
@@ -271,14 +288,31 @@ def allowed_day(section, days_off):
 #checks if a class follows all the studens preferences
 def can_add(section, selected, preferences):
     #checks if the students wants this day off
-    if not allowed_day(section, preferences.days_off):
-        return False
-    #check the break between this class and existing classes
+    day_okay =allowed_day(section, preferences.days_off)
+    #checks whetehr the class has eneough break time]
+    break_okay = True
+
     for old_section, old_name in selected:
-        if not enough_break(section, old_section, preferences.min_break):
+        #no overlap between classes
+        if overlap(section, old_section):
             return False
-    #all checks passed
-    return True
+        if not enough_break(section, old_section, preferences.min_break):
+            break_okay = False
+            break
+    #both preferences are satisfied
+    if day_okay and break_okay:
+        return True
+    #the student prioritizes days off
+    if preferences.priority == "days_off":
+        return day_okay
+    #the student prioritizes breaks
+    if preferences.priority == "breaks":
+        return break_okay
+    #balanced priority, both must be satisfied
+    return False
+
+
+   
 
 def course_maker(courses : list[list[str]], courselist:list[Course]) -> list[list[str]]:
 
@@ -339,95 +373,88 @@ def course_options(course):
            choices.append(sections)
     return choices
 
-#generates possible schedule using recursion
+#creates a copy of the preferences with a different priority
+def change_priority(preferences, new_priority):
+    return SchedulePreferences(preferences.min_break, preferences.days_off, new_priority)
+
+#generates schedules using recursion
 def generate_schedule(courses, preferences):
-    results=[]
+    #recursive helper that tried different combinations
+    def find_schedules(current_preferences):
+        results = []
 
-    #recursive function
-    def try_courses(index, selected):
-        #base case- all courses have been considered
-        if index==len(courses):
-            results.append(selected[:1])
-            return
+        def try_courses(index, selected):
+            #base case- all courses have been considered
+            if index == len(courses):
+                results.append(selected[:])
+                return
 
-        # get the current course
-        course=courses[index]
+            # get the current course
+            course = courses[index]
 
-        #try each possible section combination
-        for option in course_options(course):
-            new_selected=selected[:]
-            valid=True
+            #try each possible section combination
+            for option in course_options(course):
+                new_selected = selected[:]
+                valid = True
 
-            #check each section in this combination
-            for section in option:
-                if not can_add(section, new_selected, preferences):
-                    valid=False
-                    break
-                new_selected.append((section, course.name))
+                #check each section in this combination
+                for section in option:
+                    if not can_add(section, new_selected, current_preferences):
+                        valid = False
+                        break
+                    new_selected.append((section, course.name))
 
-            #recursion- if valid, move to the next course
-            if valid:
-                try_courses(index+1, new_selected)
+                #recursion- if valid, move to the next course
+                if valid:
+                    try_courses(index + 1, new_selected)
 
-    #start checking from the first course
-    try_courses(0, [])
-    return results
+        #start checking from the first course
+        try_courses(0, [])
+        return results
 
-#calculates information about a schedule
-def schedule_stats(selected):
-    days={}
-    #organize classes by day
+    #first try to satisfy both preferences
+    balanced_preferences = change_priority(preferences, "balanced")
+    schedule = find_schedules(balanced_preferences)
+
+    if len(schedule) > 0:
+        return schedule
+
+    #if both cant be satified, use the main priority
+    if preferences.priority == "days_off":
+        return find_schedules(change_priority(preferences, "days_off"))
+    if preferences.priority == "breaks":
+        return find_schedules(change_priority(preferences, "breaks"))
+
+    #balanced means neither preference can be relaxed
+    return []
+
+#creates a calendar using the selected class sections
+def make_calendar(selected, original_calendar):
+
+    #make a copy of the original calendar
+    new_calendar=[]
+    for row in original_calendar:
+        new_calendar.append(row[:])
+
+    #go through each seleceted class
     for section, name in selected:
-        if section.day not in days:
-            days[section.day]=[]
-        days[section.day].append(section)
+        #fina the correct day column
+        if section.day not in new_calendar[0]:
+            continue    
+        column = new_calendar[0].index(section.day)
 
-    gap_minutes=0
-    early_classes=0
-    day_spread=0
+        #convert class time into minutes
+        start = minutes(section.time_start)
+        end = minutes(section.time_end)
 
-    #check the classes on each day
-    for day in days:
+        #go through each time row
+        for row in range (1, len(new_calendar)):
+            time=minutes(new_calendar[row][0].strip())
+            #check if this time is during the class time
+            if start <= time and time< end:
+                new_calendar[row][column] = name + " - " + section.type_class
+    return new_calendar
 
-        #functipn to get the starting time of a class
-        def start_time(section):
-            return minutes(section.time_start)
-        
-        #sort classes from earliest to latest
-        sections=sorted(days[day], key=start_time)
-
-        #calculate how long the student is on campus
-        day_spread += (minutes(sections[-1].time_end) - minutes(sections[0].time_start))
-
-        #count classes starting before 10am
-        if minutes(sections[0].time_start)< minutes("10:00"):
-            early_classes+=1
-
-        #calculate the gaps between classes
-        for i in range(len(sections)-1):
-            gap_minutes += (minutes(sections[i+1].time_start) - minutes(sections[i].time_end))
-    return len(days), gap_minutes, early_classes, day_spread
-
-
-#gives each schedule a score based on the students preferences
-def score_schedule(selected, preferences):
-    #get the schedule info
-    days, gaps, early, spread = schedule_stats(selected)
-
-    #student wants fewer days on campus
-    if priority=="fewer_days":
-        return days*10000+gaps
-
-    #student wants shorter gaps between classes
-    if priority=="shorter_gaps":
-        return gaps*100+days
-
-    #student wants to avoid early classes
-    if priority=="avoid_early":
-        return early*10000+days*100+gaps
-
-    #default balanced
-    return days*10 +gaps/30+early*5+spread/120
 
 #initializes the course schedule
 
@@ -596,11 +623,38 @@ user_pref:list[str] = ["monday: Any(08:00 - 20:00)","tuesday: Any(08:00 - 20:00)
                        "wednesday: Any(08:00 - 20:00)","thursday: Any(08:00 - 20:00)",
                        "friday: Any(08:00 - 20:00)","saturday: Any(08:00 - 20:00)"]
 
+parser = argparse.ArgumentParser(prog="name", description="used to get the name of the user")
+parser.add_argument("name", help="what name to save for the calender")
+#hafsa's command line option for min break
+parser.add_argument("--min_break", type=int, default=None, help="minimum break between classes in minutes")
+args = parser.parse_args()
+
+
+
 root = tk.Tk()
 root.title("Calender")
 root.geometry("1200x700")
-root.grid_rowconfigure((0,1,2), weight=1,  uniform="a")
+root.grid_rowconfigure((0,1,2,3,4,5), weight=1,  uniform="a")
 root.grid_columnconfigure((0,1,2), weight=1,  uniform="a")
+
+#hafsa's minimum break preference
+break_label = tk.Label(root, text="Minimum break between classes (in minutes):")
+break_label.grid(row=2, column=0)
+break_entry = tk.Entry(root)
+break_entry.grid(row=2, column=1)
+break_entry.insert(0, "30")  # Default value
+#hafsa's days off preference
+days_label = tk.Label(root, text="Days off (comma-separated, e.g., Monday,Friday):")
+days_label.grid(row=3, column=0)
+days_entry = tk.Entry(root)
+days_entry.grid(row=3, column=1)
+days_entry.insert(0, "Friday")  # Default value
+#hafsa's priority preference
+priority_label = tk.Label(root, text="Priority (balanced, breaks, days_off):")
+priority_label.grid(row=4, column=0)
+priority_entry = tk.Entry(root)
+priority_entry.grid(row=4, column=1)
+priority_entry.insert(0, "balanced")  # Default value
 
 time_preference = tk.Label(root)
 inputTxt = tk.Text(root)
@@ -609,20 +663,66 @@ confirmButton = tk.Button(root)
 bigFont = tkFont.Font(family="Ariel", size=20, weight="bold")
 prefButton =tk.Button(root, text="Preference Button",font=bigFont, command=lambda :get_user_pref_tk_day(),bd=1)
 prefButton.grid(row=1,column=1, sticky='ENSW')
+
+#button to confirm the preferences and generate the schedule
+done_button = tk.Button(root, text="Generate Schedule", font=bigFont, command=root.quit)#https://coderslegacy.com/python/tkinter-close-window/
+done_button.grid(row=5, column=1)
 root.mainloop()
 
 
 print_preferences(user_pref)
+#get the minimum break from the entry
+min_break = int(break_entry.get())
+#use the command line argument for min break if provided
+if args.min_break is not None:
+    min_break = args.min_break
+
+#Hafsa's scheduling preferences
+#get the prefereed days off from the entry and split them into a list
+days_off=[]
+for day in days_entry.get().split(","):
+    days_off.append(day.strip())
+#get the priority from the entry
+priority = priority_entry.get().strip()
+my_preferences = SchedulePreferences(min_break=min_break, days_off=days_off, priority=priority)
+#save hafsa's preferences to a json file
+my_preferences.save_to_json("preferences.json")
+print("Preferences saved to preferences.json")
+#load the preferences from the json file
+my_preferences.load_from_json("preferences.json")
+print("Preferences loaded from preferences.json")
+#show the loaded preferences
+print(my_preferences.to_dict())
+print("Minimum break:", my_preferences.min_break)
+#generate a schedule based on the preferences
+my_schedule = generate_schedule(testCourseList, my_preferences)
+#check how many scjedules were found
+print("valid schedules found:", len(my_schedule))
+if len(my_schedule)>0:
+    print("Success! the scheduler found a valid schedule that meets your preferences.")
+else:
+    print("No valid schedules found that meet your preferences.")
+#show the classes in the first valid schedule
+if len(my_schedule)>0:
+    print("Classes in the first valid schedule:")
+    for section, name in my_schedule[0]:
+        print(name, section.day, section.time_start, "-", section.time_end)
+#display hafsa's selected schedule in the calendar 
+if len(my_schedule)>0:
+    hafsa_calendar = make_calendar(my_schedule[0], calendar)
+    print("calendar using your preferences:")
+    print_calendar(hafsa_calendar)
+
 newCalendar: list[list[str]] = course_maker(calendar, testCourseList)
 print_calendar(newCalendar)
 print()
 print_course_summary(newCalendar)
 #test
 
-parser = argparse.ArgumentParser(prog="name", description="used to get the name of the user")
-parser.add_argument("name", help="what name to save for the calender")
 
-args = parser.parse_args()
+
+#read the min break from the command line
+print(f"Minimum break between classes: {args.min_break} minutes")
 
 add_user_cal(args.name, newCalendar)
 cal_temp=  read_user_cal(args.name, calendar)

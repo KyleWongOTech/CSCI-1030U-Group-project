@@ -23,10 +23,16 @@ David: user matching to preferences to calendar, create algorithm
 |    Hafsa     |  m1:bc1bf0c    | m1:bc1bf0c        |  m1:bc1bf0c  |   m1:bc1bf0c | 
 
 Milestone 2:
+Kyle: Preference button with GUI (includes day and time preference),  implement classes (specifically course class that can be used with everything), save calendar to a text file, read save calendars from text file, add labs and tutorials
+Mirah:
+Hafsa: schedule preference with JSON save and load, min break is user customized, schedule scoring, top three schedules that get ranked and user can choose
+
+
+
 | Name         | OPP       |  File I/O      | Recursion  | Command-line args      | Interface |
 | :---         |:---            |:---               | :---         |:---            | :---|
 |    Kyle      |  b4df880   |    c61a86b   | c0b9981 | 4c8d2e5  | b087b1c |
 |    Nathan    |    |      |  |    | |
 |    David     |                |                   |              |                | |
 |    Mirah     |      ||  |    | |
-|    Hafsa     |      |        |  |   | |
+|    Hafsa     |   4ef4e61  |     4ef4e61    | 4ef4e61    |                       |          |
