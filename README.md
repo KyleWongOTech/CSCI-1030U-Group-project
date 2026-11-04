@@ -18,3 +18,5 @@ get_column_width(): uses 2D calendar array to loop over each cell and finds the 
 #Milestone 2
 
 Kyle's planned contribution: Implement the afternoon/evening preference, have the program add needed labs and/or tutorials when adding a lecture. Making it possible to save a calendar in a file and access it later using a name. Add command lines to add new courses.
+Hafsa: schedule preference with JSON save and load, min break is user customized, schedule priority feature 
+
