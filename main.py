@@ -197,6 +197,11 @@ def check_pref(day) ->None:
     if userInput in ["1","2","3","4"]:
         inputTxt.delete("1.0","end-1c")
         get_user_pref(day, userInput)
+    elif userInput == "done":
+        time_preference.grid_forget()
+        inputTxt.grid_forget()
+        confirmButton.grid_forget()
+        prefButton.grid(row=1,column=1, sticky='ENSW')
 
 def get_user_pref_tk_day() ->None:
     prefButton.grid_forget()
@@ -623,11 +628,24 @@ user_pref:list[str] = ["monday: Any(08:00 - 20:00)","tuesday: Any(08:00 - 20:00)
                        "wednesday: Any(08:00 - 20:00)","thursday: Any(08:00 - 20:00)",
                        "friday: Any(08:00 - 20:00)","saturday: Any(08:00 - 20:00)"]
 
-parser = argparse.ArgumentParser(prog="name", description="used to get the name of the user")
-parser.add_argument("name", help="what name to save for the calender")
-#hafsa's command line option for min break
-parser.add_argument("--min_break", type=int, default=None, help="minimum break between classes in minutes")
-args = parser.parse_args()
+
+def main():
+
+
+    parser = argparse.ArgumentParser(description="used to get the name of the user")
+    parser.add_argument("name", help="what name to save for the calender")
+    #hafsa's command line option for min break
+    parser.add_argument("--min_break", type=int, default=None, help="minimum break between classes in minutes")
+    args = parser.parse_args()
+
+    #read the min break from the command line
+    print(f"Minimum break between classes: {args.min_break} minutes")
+
+    add_user_cal(args.name, newCalendar)
+    cal_temp=  read_user_cal(args.name, calendar)
+
+    if args.min_break is not None:
+        min_break = args.min_break
 
 
 
@@ -660,7 +678,7 @@ time_preference = tk.Label(root)
 inputTxt = tk.Text(root)
 confirmButton = tk.Button(root)
 
-bigFont = tkFont.Font(family="Ariel", size=20, weight="bold")
+bigFont = tkFont.Font(family="Ariel", size=12, weight="bold")
 prefButton =tk.Button(root, text="Preference Button",font=bigFont, command=lambda :get_user_pref_tk_day(),bd=1)
 prefButton.grid(row=1,column=1, sticky='ENSW')
 
@@ -674,8 +692,6 @@ print_preferences(user_pref)
 #get the minimum break from the entry
 min_break = int(break_entry.get())
 #use the command line argument for min break if provided
-if args.min_break is not None:
-    min_break = args.min_break
 
 #Hafsa's scheduling preferences
 #get the prefereed days off from the entry and split them into a list
@@ -720,11 +736,9 @@ print_course_summary(newCalendar)
 #test
 
 
+if __name__=="__main__":
+    main()
 
-#read the min break from the command line
-print(f"Minimum break between classes: {args.min_break} minutes")
 
-add_user_cal(args.name, newCalendar)
-cal_temp=  read_user_cal(args.name, calendar)
 
 
