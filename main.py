@@ -2,6 +2,7 @@ import argparse
 import tkinter as tk
 from tkinter import font as tkFont
 import json
+import csv
 
 #section class that keeps track of what day and times the classes happen in
 class Section:
@@ -90,27 +91,105 @@ def print_preferences(pref: list[str]):
         print(f"{pref[i]}")
 
 
-def get_column_width(user_calender: list[list[str]]) -> int:
-    # finding the max length of each string on the calendar
-    max_length = 0
-    for row in user_calender:
-        for cell in row:
-            if len(cell.strip()) > max_length:      # strip() takes spaces out
-                max_length = len(cell.strip())
-    return max_length + 2
+
+#Mirah Milestone #2: class that shows the calendar (terminal, csv file, and tkinter window)
+class CalendarView:
+    def __init__(self, user_calender: list[list[str]]):
+        self.calendar = user_calender   # the 2D calendar to show
+        self.colours = {}               # course name -> colour for the window
+
+    #recursion: finds the longest cell starting at row_index and going down
+    def widest_cell(self, row_index: int = 0) -> int:
+        #base case- no rows left
+        if row_index == len(self.calendar):
+            return 0
+        widest_here = 0
+        for cell in self.calendar[row_index]:
+            if len(cell.strip()) > widest_here:      # strip() takes spaces out
+                widest_here = len(cell.strip())
+        #recursive case- compare this row with the widest of the rest
+        return max(widest_here, self.widest_cell(row_index + 1))
+
+    def column_width(self) -> int:
+        return self.widest_cell() + 2
+
+    def print_grid(self):
+        column_width = self.column_width()
+        line = "-" * ((column_width + 1) * len(self.calendar[0]) - 1)
+
+        print(line)
+        for i in range(len(self.calendar)):
+            print("|".join(cell.strip().center(column_width) for cell in self.calendar[i]))
+            if i == 0:
+                print(line)      # divider under the day names
+        print(line)
+
+    def courses_by_day(self) -> dict[str, list[str]]:
+        courses = {}
+        # column 0 is the time, so days start at column 1
+        for col in range(1, len(self.calendar[0])):
+            day = self.calendar[0][col].strip()
+            courses[day] = []
+            for row in self.calendar[1:]:
+                name = row[col].strip()
+                if name != "" and name not in courses[day]:
+                    courses[day].append(name)
+        return courses
+
+    def print_summary(self):
+        courses = self.courses_by_day()
+        print("Courses per day:\n")
+        for day in courses:
+            if len(courses[day]) == 0:
+                print(f"{day:<10}: Free")
+            else:
+                print(f"{day:<10}: " + ", ".join(courses[day]))
+
+    #file i/o: writes the calendar to a csv file (opens in excel)
+    def export_csv(self, filename: str):
+        with open(filename, "w", newline="") as f:
+            writer = csv.writer(f)
+            for row in self.calendar:
+                writer.writerow([cell.strip() for cell in row])
+        print(f"Calendar exported to {filename}")
+
+    #gives every course its own colour in the window
+    def colour_for(self, cell: str) -> str:
+        palette = ["#afb4b6", "#ffcfdf", "#fefdca", "#c3f0ca", "#e0c3fc", "#ffd8a8"]
+        if cell == "":
+            return "white"
+        course_name = cell.split(" - ")[0]
+        if course_name not in self.colours:
+            self.colours[course_name] = palette[len(self.colours) % len(palette)]
+        return self.colours[course_name]
+
+    #interface: shows the calendar as a grid of coloured labels in a tkinter window
+    def show_window(self, parent: tk.Tk):
+        window = tk.Toplevel(parent)
+        window.title("Your Schedule")
+        small_font = ("Arial", 8)
+        for r in range(len(self.calendar)):
+            for c in range(len(self.calendar[r])):
+                cell = self.calendar[r][c].strip()
+                if r == 0 or c == 0:
+                    colour = "lightgrey"    # headers (days and times)
+                else:
+                    colour = self.colour_for(cell)
+                label = tk.Label(window, text=cell, bg=colour, font=small_font,
+                                 width=18, relief="ridge", bd=1)
+                label.grid(row=r, column=c, sticky="NSEW")
+        tk.Button(window, text="Close", command=window.destroy).grid(
+            row=len(self.calendar), column=0, columnspan=len(self.calendar[0]), sticky="EW")
+        parent.wait_window(window)   # waits until the window is closed
 
 
+#old function names still work so the rest of the code doesn't break
 def print_calendar(user_calender: list[list[str]]):
-    column_width = get_column_width(user_calender)
-    line = "-" * ((column_width + 1) * len(user_calender[0]) - 1)
+    CalendarView(user_calender).print_grid()
 
-    print(line)
-    for i in range(len(user_calender)):
-        print("|".join(cell.strip().center(column_width) for cell in user_calender[i]))
-        if i == 0:
-            print(line)      # divider under the day names
-    print(line)
 
+def print_course_summary(user_calender: list[list[str]]):
+    CalendarView(user_calender).print_summary()
 
 def print_course_summary(user_calender: list[list[str]]):
     courses_by_day = {}
@@ -636,7 +715,14 @@ def main():
     parser.add_argument("name", help="what name to save for the calender")
     #hafsa's command line option for min break
     parser.add_argument("--min_break", type=int, default=None, help="minimum break between classes in minutes")
+    #command line options for exporting to csv
+    parser.add_argument("--export", default=None, help="save the calendar to a csv file, example: schedule.csv")
     args = parser.parse_args()
+
+    view = CalendarView(newCalendar)
+    if args.export is not None:
+        view.export_csv(args.export)
+    view.show_window(root)
 
     #read the min break from the command line
     print(f"Minimum break between classes: {args.min_break} minutes")

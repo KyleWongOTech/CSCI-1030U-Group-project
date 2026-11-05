@@ -23,12 +23,10 @@ David: user matching to preferences to calendar, create algorithm
 |    Hafsa     |  m1:bc1bf0c    | m1:bc1bf0c        |  m1:bc1bf0c  |   m1:bc1bf0c | 
 
 
-
-
 | Name         | OPP       |  File I/O      | Recursion  | Command-line args      | Interface |
 | :---         |:---            |:---               | :---         |:---            | :---|
 |    Kyle      |  b4df880   |    c61a86b   | c0b9981 | 4c8d2e5  | b087b1c |
 |    Nathan    |    |      |  |    | |
 |    David     |                |                   |              |                | |
-|    Mirah     |      ||  |    | |
+|    Mirah     |c563837|c563837|c563837|c563837|c563837| #one commit
 |    Hafsa     |   4ef4e61  |  4ef4e61    | 4ef4e61    |    4ef4e61      |    4ef4e61  | #all in the same commit
