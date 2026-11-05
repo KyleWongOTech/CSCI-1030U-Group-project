@@ -529,7 +529,7 @@ def generate_schedule(courses, preferences):
     if len(schedule) > 0:
         return schedule
 
-    #if both cant be satified, use the main priority
+    #if both cant be satified, use the main 
     if preferences.priority == "days_off":
         return find_schedules(change_priority(preferences, "days_off"))
     if preferences.priority == "breaks":
@@ -734,33 +734,7 @@ user_pref:list[str] = ["monday: Any(08:00 - 20:00)","tuesday: Any(08:00 - 20:00)
                        "friday: Any(08:00 - 20:00)","saturday: Any(08:00 - 20:00)"]
 
 
-def main():
 
-
-    parser = argparse.ArgumentParser(description="used to get the name of the user")
-    parser.add_argument("name", help="what name to save for the calender")
-    #hafsa's command line option for min break
-    parser.add_argument("--min_break", type=int, default=None, help="minimum break between classes in minutes")
-    #command line options for exporting to csv
-    parser.add_argument("--export", default=None, help="save the calendar to a csv file, example: schedule.csv")
-    args = parser.parse_args()
-
-    newCalendar = [row[:] for row in calendar]
-
-    view = CalendarView(newCalendar)
-    view.show_window(root)
-    if args.export is not None:
-        view.export_csv(args.export)
-    
-
-    #read the min break from the command line
-    print(f"Minimum break between classes: {args.min_break} minutes")
-
-    add_user_cal(args.name, newCalendar)
-    cal_temp=  read_user_cal(args.name, calendar)
-
-    if args.min_break is not None:
-        min_break = args.min_break
 
 
 
@@ -773,7 +747,8 @@ def main():
 
 student_accounts = {
     "1001": "student123",
-    "1002": "password456"
+    "1002": "password456",
+    "1" : "1"
 }
 
 logged_in_student = None
@@ -1083,7 +1058,8 @@ def generate_schedule_menu():
         main_frame,
         text="Generate",
         font=bigFont,
-        command=root.quit
+        command=root.quit,
+
     ).grid(row=2, column=1)
 
     tk.Button(
@@ -1103,3 +1079,35 @@ root.mainloop()
 
 
 
+def main():
+
+    course_maker(calendar,testCourseList)
+
+    parser = argparse.ArgumentParser(description="used to get the name of the user")
+    parser.add_argument("name", help="what name to save for the calender")
+    #hafsa's command line option for min break
+    parser.add_argument("--min_break", type=int, default=None, help="minimum break between classes in minutes")
+    #command line options for exporting to csv
+    parser.add_argument("--export", default=None, help="save the calendar to a csv file, example: schedule.csv")
+    args = parser.parse_args()
+
+    newCalendar = [row[:] for row in calendar]
+
+    view = CalendarView(newCalendar)
+    view.show_window(root)
+    if args.export is not None:
+        view.export_csv(args.export)
+    
+
+    #read the min break from the command line
+    print(f"Minimum break between classes: {args.min_break} minutes")
+
+    add_user_cal(args.name, newCalendar)
+    cal_temp=  read_user_cal(args.name, calendar)
+
+    if args.min_break is not None:
+        min_break = args.min_break
+
+#keep this at the bottom and do not delete it
+if __name__=="__main__":
+    main()
