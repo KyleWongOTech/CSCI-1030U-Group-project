@@ -1,0 +1,7 @@
+{
+    "min_break": 30,
+    "days_off": [
+        "Friday"
+    ],
+    "priority": "balanced"
+}

@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import font as tkFont
 import json
 import csv
+from tkinter import messagebox
+import hashlib
 
 #section class that keeps track of what day and times the classes happen in
 class Section:
@@ -258,31 +260,53 @@ def place_lab_tutorial(available: bool, className: str, mylist: list[Section], t
                     available=True
     return temp_cal, available
 
+# Tk widgets used by the preference interface. They are initialized lazily because
+# the preference functions can be called before the main window setup is complete.
+inputTxt = None
+time_preference = None
+confirmButton = None
+prefButton = None
+
+
+def ensure_preference_widgets() -> None:
+    global inputTxt, time_preference, confirmButton, prefButton
+
+    if inputTxt is None:
+        time_preference = tk.Label(root, text="", font=bigFont)
+        inputTxt = tk.Text(root, height=15, width=20, font=bigFont)
+        confirmButton = tk.Button(root, text="Confirm Choice")
+        prefButton = tk.Button(root, text="Preferences", font=bigFont,
+                               command=get_user_pref_tk_day)
+
+
 def check_day() -> None:
+    ensure_preference_widgets()
     days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
-    userInput:str= inputTxt.get("1.0", "end-1c")
+    userInput: str = inputTxt.get("1.0", "end-1c").strip().lower()
     print(userInput)
     if userInput in days:
-        inputTxt.delete("1.0","end-1c")
+        inputTxt.delete("1.0", "end-1c")
         get_user_pref_tk_pref(userInput)
     elif userInput == "done":
         time_preference.grid_forget()
         inputTxt.grid_forget()
         confirmButton.grid_forget()
-        prefButton.grid(row=1,column=1, sticky='ENSW')
+        prefButton.grid(row=1, column=1, sticky='ENSW')
 
-def check_pref(day) ->None:
-    userInput:str = inputTxt.get("1.0", "end-1c")
-    if userInput in ["1","2","3","4"]:
-        inputTxt.delete("1.0","end-1c")
+def check_pref(day) -> None:
+    userInput: str = inputTxt.get("1.0", "end-1c").strip()
+    if userInput in ["1", "2", "3", "4"]:
+        inputTxt.delete("1.0", "end-1c")
         get_user_pref(day, userInput)
-    elif userInput == "done":
+    elif userInput.lower() == "done":
         time_preference.grid_forget()
         inputTxt.grid_forget()
         confirmButton.grid_forget()
-        prefButton.grid(row=1,column=1, sticky='ENSW')
+        prefButton.grid(row=1, column=1, sticky='ENSW')
+
 
 def get_user_pref_tk_day() ->None:
+    ensure_preference_widgets()
     prefButton.grid_forget()
 
     time_preference.config(text="\nChoose a day of the week \n from Monday to Saturday", font=bigFont)
@@ -292,7 +316,9 @@ def get_user_pref_tk_day() ->None:
     confirmButton.config(text="Confirm Choice", height=5, command=lambda : check_day())
     confirmButton.grid(row=1, column=1, sticky='ESW')
 
+
 def get_user_pref_tk_pref(day:str) ->None:
+    ensure_preference_widgets()
 
     time_preference.config(text="\nTime of day preferences:\n1. Morning (08:00 - 12:00)"
                                 +"\n2. Afternoon (12:00 - 16:00)\n3. Evening (16:00 - 20:00)"
@@ -719,10 +745,13 @@ def main():
     parser.add_argument("--export", default=None, help="save the calendar to a csv file, example: schedule.csv")
     args = parser.parse_args()
 
+    newCalendar = [row[:] for row in calendar]
+
     view = CalendarView(newCalendar)
+    view.show_window(root)
     if args.export is not None:
         view.export_csv(args.export)
-    view.show_window(root)
+    
 
     #read the min break from the command line
     print(f"Minimum break between classes: {args.min_break} minutes")
@@ -735,95 +764,341 @@ def main():
 
 
 
+
+# ================= MAIN MENU + LOGIN =================
+
+# Demo student accounts
+# Student ID: 1001 | Password: student123
+# Student ID: 1002 | Password: password456
+
+student_accounts = {
+    "1001": "student123",
+    "1002": "password456"
+}
+
+logged_in_student = None
+
 root = tk.Tk()
-root.title("Calender")
+root.title("Student Schedule Planner")
 root.geometry("1200x700")
-root.grid_rowconfigure((0,1,2,3,4,5), weight=1,  uniform="a")
-root.grid_columnconfigure((0,1,2), weight=1,  uniform="a")
 
-#hafsa's minimum break preference
-break_label = tk.Label(root, text="Minimum break between classes (in minutes):")
-break_label.grid(row=2, column=0)
-break_entry = tk.Entry(root)
-break_entry.grid(row=2, column=1)
-break_entry.insert(0, "30")  # Default value
-#hafsa's days off preference
-days_label = tk.Label(root, text="Days off (comma-separated, e.g., Monday,Friday):")
-days_label.grid(row=3, column=0)
-days_entry = tk.Entry(root)
-days_entry.grid(row=3, column=1)
-days_entry.insert(0, "Friday")  # Default value
-#hafsa's priority preference
-priority_label = tk.Label(root, text="Priority (balanced, breaks, days_off):")
-priority_label.grid(row=4, column=0)
-priority_entry = tk.Entry(root)
-priority_entry.grid(row=4, column=1)
-priority_entry.insert(0, "balanced")  # Default value
+root.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
+root.grid_columnconfigure((0, 1, 2), weight=1)
 
-time_preference = tk.Label(root)
-inputTxt = tk.Text(root)
-confirmButton = tk.Button(root)
+bigFont = tkFont.Font(family="Arial", size=14, weight="bold")
 
-bigFont = tkFont.Font(family="Ariel", size=12, weight="bold")
-prefButton =tk.Button(root, text="Preference Button",font=bigFont, command=lambda :get_user_pref_tk_day(),bd=1)
-prefButton.grid(row=1,column=1, sticky='ENSW')
+# Main container for switching screens
+main_frame = tk.Frame(root)
+main_frame.grid(row=0, column=0, rowspan=6, columnspan=3,
+                sticky="nsew")
 
-#button to confirm the preferences and generate the schedule
-done_button = tk.Button(root, text="Generate Schedule", font=bigFont, command=root.quit)#https://coderslegacy.com/python/tkinter-close-window/
-done_button.grid(row=5, column=1)
+main_frame.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
+main_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
+
+# Clear the current screen
+def clear_screen():
+    for widget in main_frame.winfo_children():
+        widget.destroy()
+
+
+# LOGIN SCREEN
+def login_screen():
+    clear_screen()
+
+    tk.Label(
+        main_frame,
+        text="STUDENT SCHEDULE PLANNER",
+        font=("Arial", 24, "bold")
+    ).grid(row=0, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Student ID:",
+        font=bigFont
+    ).grid(row=1, column=0)
+
+    student_id_entry = tk.Entry(main_frame, font=bigFont)
+    student_id_entry.grid(row=1, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Password:",
+        font=bigFont
+    ).grid(row=2, column=0)
+
+    password_entry = tk.Entry(main_frame, show="*", font=bigFont)
+    password_entry.grid(row=2, column=1)
+
+    message_label = tk.Label(main_frame, text="", fg="red")
+    message_label.grid(row=4, column=1)
+
+    def login():
+        global logged_in_student
+
+        student_id = student_id_entry.get().strip()
+        password = password_entry.get()
+
+        if student_id in student_accounts and student_accounts[student_id] == password:
+            logged_in_student = student_id
+            main_menu()
+        else:
+            message_label.config(
+                text="Invalid student ID or password."
+            )
+
+    tk.Button(
+        main_frame,
+        text="Login",
+        font=bigFont,
+        command=login
+    ).grid(row=3, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Create Account",
+        font=bigFont,
+        command=register_screen
+    ).grid(row=5, column=1)
+
+    password_entry.bind("<Return>", lambda event: login())
+
+# CREATE ACCOUNT SCREEN
+def register_screen():
+    clear_screen()
+
+    tk.Label(
+        main_frame,
+        text="CREATE ACCOUNT",
+        font=("Arial", 24, "bold")
+    ).grid(row=0, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Create Student ID:",
+        font=bigFont
+    ).grid(row=1, column=0)
+
+    new_id_entry = tk.Entry(main_frame, font=bigFont)
+    new_id_entry.grid(row=1, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Create Password:",
+        font=bigFont
+    ).grid(row=2, column=0)
+
+    new_password_entry = tk.Entry(main_frame, show="*", font=bigFont)
+    new_password_entry.grid(row=2, column=1)
+
+    message_label = tk.Label(main_frame, text="", fg="red")
+    message_label.grid(row=4, column=1)
+
+    def create_account():
+        student_id = new_id_entry.get().strip()
+        password = new_password_entry.get()
+
+        if not student_id or not password:
+            message_label.config(text="Please fill in both fields.")
+        elif student_id in student_accounts:
+            message_label.config(text="Student ID already exists.")
+        else:
+            student_accounts[student_id] = password
+
+            messagebox.showinfo(
+                "Account Created",
+                "Your account has been created!"
+            )
+
+            login_screen()
+
+    tk.Button(
+        main_frame,
+        text="Create Account",
+        font=bigFont,
+        command=create_account
+    ).grid(row=3, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Back to Login",
+        font=bigFont,
+        command=login_screen
+    ).grid(row=5, column=1)
+# MAIN MENU
+def main_menu():
+    clear_screen()
+
+    tk.Label(
+        main_frame,
+        text="MAIN MENU",
+        font=("Arial", 24, "bold")
+    ).grid(row=0, column=1)
+
+    tk.Label(
+        main_frame,
+        text=f"Welcome Student {logged_in_student}",
+        font=bigFont
+    ).grid(row=1, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Generate Schedule",
+        font=bigFont,
+        width=25,
+        command=generate_schedule_menu
+    ).grid(row=2, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Preferences",
+        font=bigFont,
+        width=25,
+        command=preferences_screen
+    ).grid(row=3, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Logout",
+        font=bigFont,
+        width=25,
+        command=login_screen
+    ).grid(row=4, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Exit",
+        font=bigFont,
+        width=25,
+        command=root.destroy
+    ).grid(row=5, column=1)
+
+
+# PREFERENCES SCREEN
+def preferences_screen():
+    clear_screen()
+
+    tk.Label(
+        main_frame,
+        text="SCHEDULE PREFERENCES",
+        font=("Arial", 24, "bold")
+    ).grid(row=0, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Minimum break between classes:",
+        font=bigFont
+    ).grid(row=1, column=0)
+
+    break_entry = tk.Entry(main_frame, font=bigFont)
+    break_entry.insert(0, "30")
+    break_entry.grid(row=1, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Days off (comma-separated):",
+        font=bigFont
+    ).grid(row=2, column=0)
+
+    days_entry = tk.Entry(main_frame, font=bigFont)
+    days_entry.insert(0, "Friday")
+    days_entry.grid(row=2, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Priority (balanced, breaks, days_off):",
+        font=bigFont
+    ).grid(row=3, column=0)
+
+    priority_entry = tk.Entry(main_frame, font=bigFont)
+    priority_entry.insert(0, "balanced")
+    priority_entry.grid(row=3, column=1)
+
+    def save_preferences():
+        try:
+            min_break = int(break_entry.get())
+
+            days_off = [
+                day.strip()
+                for day in days_entry.get().split(",")
+                if day.strip()
+            ]
+
+            priority = priority_entry.get().strip()
+
+            if priority not in ["balanced", "breaks", "days_off"]:
+                raise ValueError
+
+            preferences = SchedulePreferences(
+                min_break=min_break,
+                days_off=days_off,
+                priority=priority
+            )
+
+            preferences.save_to_json(
+                f"preferences_{logged_in_student}.json"
+            )
+
+            main_menu()
+
+        except ValueError:
+            tk.Label(
+                main_frame,
+                text="Invalid preference values!",
+                fg="red"
+            ).grid(row=5, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Save Preferences",
+        font=bigFont,
+        command=save_preferences
+    ).grid(row=4, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Back",
+        font=bigFont,
+        command=main_menu
+    ).grid(row=5, column=0)
+
+
+# GENERATE SCHEDULE MENU
+def generate_schedule_menu():
+    clear_screen()
+
+    tk.Label(
+        main_frame,
+        text="GENERATE SCHEDULE",
+        font=("Arial", 24, "bold")
+    ).grid(row=0, column=1)
+
+    tk.Label(
+        main_frame,
+        text="Your schedule will be generated.",
+        font=bigFont
+    ).grid(row=1, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Generate",
+        font=bigFont,
+        command=root.quit
+    ).grid(row=2, column=1)
+
+    tk.Button(
+        main_frame,
+        text="Back",
+        font=bigFont,
+        command=main_menu
+    ).grid(row=3, column=1)
+
+
+# Start at the login screen
+login_screen()
+
+# Run the application
 root.mainloop()
-
-
-print_preferences(user_pref)
-#get the minimum break from the entry
-min_break = int(break_entry.get())
-#use the command line argument for min break if provided
-
-#Hafsa's scheduling preferences
-#get the prefereed days off from the entry and split them into a list
-days_off=[]
-for day in days_entry.get().split(","):
-    days_off.append(day.strip())
-#get the priority from the entry
-priority = priority_entry.get().strip()
-my_preferences = SchedulePreferences(min_break=min_break, days_off=days_off, priority=priority)
-#save hafsa's preferences to a json file
-my_preferences.save_to_json("preferences.json")
-print("Preferences saved to preferences.json")
-#load the preferences from the json file
-my_preferences.load_from_json("preferences.json")
-print("Preferences loaded from preferences.json")
-#show the loaded preferences
-print(my_preferences.to_dict())
-print("Minimum break:", my_preferences.min_break)
-#generate a schedule based on the preferences
-my_schedule = generate_schedule(testCourseList, my_preferences)
-#check how many scjedules were found
-print("valid schedules found:", len(my_schedule))
-if len(my_schedule)>0:
-    print("Success! the scheduler found a valid schedule that meets your preferences.")
-else:
-    print("No valid schedules found that meet your preferences.")
-#show the classes in the first valid schedule
-if len(my_schedule)>0:
-    print("Classes in the first valid schedule:")
-    for section, name in my_schedule[0]:
-        print(name, section.day, section.time_start, "-", section.time_end)
-#display hafsa's selected schedule in the calendar 
-if len(my_schedule)>0:
-    hafsa_calendar = make_calendar(my_schedule[0], calendar)
-    print("calendar using your preferences:")
-    print_calendar(hafsa_calendar)
-
-newCalendar: list[list[str]] = course_maker(calendar, testCourseList)
-print_calendar(newCalendar)
-print()
-print_course_summary(newCalendar)
-#test
-
-
-if __name__=="__main__":
-    main()
 
 
 
